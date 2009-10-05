@@ -1,0 +1,31 @@
+<!-- -*- Mode: XML -*- -->
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:py="http://genshi.edgewall.org/"
+      xmlns:xi="http://www.w3.org/2001/XInclude">
+  <xi:include href="common.xhtml"/>
+
+  <head>
+    <title>Create a new user</title>
+  </head>
+  <body>
+    <h1>Create a new user</h1>
+
+    <form action="${genlink('createuser')}" method="POST">
+      <p><label for="username">Username</label><input id="username" type="text" name="username" size="20" /></p>
+
+      <p><label for="email">Email</label><input id="email" type="text" name="email" size="30" /></p>
+
+      <p><label for="password1">Password</label><input id="password1" type="password" name="password1" size="20" /><br/>
+        <label for="password2">Retype Password:</label><input id="password2" type="password" name="password2" size="20" /></p>
+
+
+      <h2>Member of Projects</h2>
+      <ul>
+        <li py:for="project in projects">
+          <label for="project_${project}">${project}</label><input id="project_${project}" type="checkbox" name="project_${project}" value="1"/>
+        </li>
+      </ul>
+      <p><input type="submit" value="Create User"/></p>
+    </form>
+  </body>
+</html>

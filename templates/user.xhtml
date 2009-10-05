@@ -1,0 +1,18 @@
+<!-- -*- Mode: XML -*- -->
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:py="http://genshi.edgewall.org/"
+      xmlns:xi="http://www.w3.org/2001/XInclude">
+  <xi:include href="common.xhtml"/>
+
+  <head>
+    <title>Weekly Updates: user ${user}</title>
+  </head>
+  <body>
+    <h1>${user}</h1>
+
+    <h2>Active Projects</h2>
+    <ul>
+      <li py:for="project in projects"><a href="${genlink('project/%s' % project)}">${project}</a></li>
+    </ul>
+  </body>
+</html>

@@ -1,0 +1,19 @@
+<!-- -*- Mode: XML -*- -->
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:py="http://genshi.edgewall.org/"
+      xmlns:xi="http://www.w3.org/2001/XInclude">
+  <xi:include href="common.xhtml"/>
+
+  <head>
+    <title>Login</title>
+  </head>
+  <body>
+    <h1>Login</h1>
+
+    <form action="${genlink('login')}" method="POST">
+      <p><label for="username">Username</label><input id="username" type="text" name="username" size="20" /></p>
+      <p><label for="password1">Password</label><input id="password1" type="password" name="password1" size="20" /></p>
+      <p><input type="submit" value="Login" /></p>
+    </form>
+  </body>
+</html>

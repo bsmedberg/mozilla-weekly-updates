@@ -1,0 +1,17 @@
+<!-- -*- Mode: XML -*- -->
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:py="http://genshi.edgewall.org/"
+      xmlns:xi="http://www.w3.org/2001/XInclude">
+  <xi:include href="common.xhtml"/>
+
+  <head>
+    <title>Weekly Updates for Mozilla Projects</title>
+  </head>
+  <body>
+    <h1>Available Projects</h1>
+
+    <ul>
+      <li py:for="project in projects"><a href="project/${project}">${project}</a></li>
+    </ul>
+  </body>
+</html>

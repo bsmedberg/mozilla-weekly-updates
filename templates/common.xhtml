@@ -1,0 +1,83 @@
+<!-- -*- Mode: XML -*- -->
+<?python from urllib import quote, urlencode ?>
+<div xmlns="http://www.w3.org/1999/xhtml"
+     xmlns:py="http://genshi.edgewall.org/"
+     py:strip="True">
+  <py:def function="genlink(*paths, **params)">${baseurl}/${'/'.join([quote(str(path)) for path in paths])}<py:if test="len(params)">?${urlencode(params)}</py:if></py:def>
+
+  <head py:match="head">
+    ${select("*|text()")}
+    <link type="text/css" rel="stylesheet" href="${baseurl}/static/ui.css" />
+  </head>
+
+  <body py:match="body">
+    <div class="header">
+      <a href="${genlink('')}">Weekly Updates</a> |
+      <py:choose test="loginname">
+        <py:when test="None">
+          <a href="${genlink('login')}">Log in</a> |
+          <a href="${genlink('createuser')}">Create User</a>
+        </py:when>
+        <py:otherwise>
+          <a href="${genlink('me')}">${loginname}</a> |
+          <a href="${genlink('post')}">New Post</a> |
+          <form id="logout" action="${genlink('logout')}" method="POST"><input id="logout-button" type="submit" value="Log out"/></form>
+        </py:otherwise>
+      </py:choose>
+    </div>
+    ${select("*|text()")}
+  </body>
+
+  <div py:def="postdetail(post, showuser=True, cssclass='postdetail')"
+       class="${cssclass}">
+    <py:choose test="post.username">
+      <py:when test="None">
+        <p>No status posted</p>
+      </py:when>
+      <py:otherwise>
+        <p class="postinfo">Posted
+          <py:if test="showuser">by ${post.username}</py:if>
+          on ${post.postdate.isoformat()}
+        </p>
+
+        <div class="completed" py:if="post.completed is not None">
+          <h3>Done</h3>
+          <p class="userdata">${post.completed}</p>
+        </div>
+
+        <div class="planned" py:if="post.planned is not None">
+          <h3>Next</h3>
+          <p class="userdata">${post.planned}</p>
+        </div>
+
+        <div class="tags" py:if="post.tags is not None">
+          <h3>Tags</h3>
+          <p class="userdata">${post.tags}</p>
+        </div>
+      </py:otherwise>
+    </py:choose>
+  </div>
+
+  <div py:def="postlist(posts)" class="postlist">
+    <py:for each="post in posts">
+      ${postdetail(post, cssclass='postlistdetail')}
+    </py:for>
+  </div>
+
+  <form py:def="editpost(post)" class="editpost"
+        action="${genlink(post.postdate is None and 'post' or 'post/%i' % post.postdate.toordinal())}" method="POST">
+
+    <div class="fullwidth">
+      <h3>Done</h3>
+      <p><textarea id="completed" name="completed" class="fullwidth" rows="6">${post.completed}</textarea></p>
+
+      <h3>Next</h3>
+      <p><textarea id="planned" name="planned" class="fullwidth" rows="6">${post.planned}</textarea></p>
+
+      <h3>Tags</h3>
+      <p><textarea id="tags" name="tags" class="fullwidth" rows="3">${post.tags}</textarea></p>
+
+      <p><input type="submit" value="Submit" /></p>
+    </div>
+  </form>
+</div>

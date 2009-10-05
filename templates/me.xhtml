@@ -1,0 +1,68 @@
+<!-- -*- Mode: XML -*- -->
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:py="http://genshi.edgewall.org/"
+      xmlns:xi="http://www.w3.org/2001/XInclude">
+  <xi:include href="common.xhtml"/>
+
+  <head>
+    <title>My Status</title>
+  </head>
+  <body>
+    <div class="columns">
+      <div class="keeptogether">
+        <h2><a href="${genlink('user', loginname, 'teamupdates')}">Team Reports</a> <a href="${genlink('user', loginname, 'teamupdates', 'feed')}" class="feedlink"><img class="feedicon" src="${genlink('static/feed-icon-14x14.png')}" height="14" width="14"/></a></h2>
+
+        ${postlist(projectposts)}
+      </div>
+
+      <div class="keeptogether">
+        <h2>Current Status</h2>
+        ${postdetail(posts[0], showuser=False)}
+      </div>
+
+      <div class="keeptogether">
+        <h2 py:choose="thispost.postdate">
+          <py:when test="None">New Status Report</py:when>
+          <py:otherwise>Edit Today's Status</py:otherwise>
+        </h2>
+        ${editpost(thispost)}
+      </div>
+
+      <div class="keeptogether" py:if="len(posts) > 1">
+        <h3>Older Posts</h3>
+        <ol>
+          <li py:for="post in posts[1:]"><a href="${genlink('post', post.postdate.toordinal())}">post.postdate.isoformat()</a></li>
+        </ol>
+      </div>
+    </div>
+
+    <h2>Preferences</h2>
+
+    <form action="${genlink('me')}" method="POST">
+      <h3>Email</h3>
+
+      <p><label for="email">Email</label><input id="email" type="text" name="email" size="30" value="${email}" /></p>
+
+      <h3>Change Password</h3>
+
+      <p><label for="oldpassword">Old password</label><input id="oldpassword" type="password" name="oldpassword" size="20" /></p>
+
+      <p><label for="newpassword1">Password</label><input id="newpassword1" type="password" name="newpassword1" size="20" /></p>
+      <p><label for="newpassword2">Password</label><input id="newpassword2" type="password" name="newpassword2" size="20" /></p>
+
+      <h3>Member of Projects</h3>
+
+      <ul>
+        <li py:for="project, current in projects">
+          <label for="project_${project}">${project}</label>
+          <input id="updateproject_${project}" type="hidden" name="updateproject_${project}" value="1"/>
+          <input id="project_${project}" type="checkbox" name="project_${project}" value="1"
+                 py:attrs="{'checked': current and 'checked' or ''}" />
+        </li>
+      </ul>
+
+      <p><input type="submit" value="Save Preferences"/></p>
+
+    </form>
+  </body>
+</html>
