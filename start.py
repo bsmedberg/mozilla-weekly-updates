@@ -22,3 +22,4 @@ for c in options.appconfigs:
     app.merge(c)
 
 cherrypy.engine.start()
+cherrypy.engine.block()

@@ -5,14 +5,39 @@
   <xi:include href="common.xhtml"/>
 
   <head>
-    <title>Weekly Updates: user ${user}</title>
+    <title>Mozilla Status Board: ${username}</title>
+    <link href="${genlink('user', username, 'posts/feed')}" type="application/atom+xml"
+          rel="alternate" title="User posts"/>
   </head>
   <body>
-    <h1>${user}</h1>
+    <h1>${username}</h1>
 
-    <h2>Active Projects</h2>
-    <ul>
-      <li py:for="project in projects"><a href="${genlink('project/%s' % project)}">${project}</a></li>
-    </ul>
+    <div class="keeptogether">
+      <h2>Current Status
+        <span class="subhead" py:if="userposts[0].postdate is not None">
+          - Posted on ${userposts[0].postdate.isoformat()}
+        </span>
+      </h2>
+      ${postdetail(userposts[0], showuser=False, showdate=False)}
+    </div>
+
+    <h2><a href="${genlink('user', username, 'posts')}">Older Posts</a>
+      <a href="${genlink('user', username, 'posts/feed')}" class="feedlink"/>
+    </h2>
+
+    <div class="keeptogether">
+      <h2>Member of Projects</h2>
+      <ul>
+        <li py:for="project in projects"><a href="${genlink('project/%s' % project)}">${project}</a></li>
+      </ul>
+    </div>
+
+    <div class="keeptogether">
+      <h2><a href="${genlink('user', username, 'teamposts')}">Team Posts</a>
+        <a href="${genlink('user', username, 'teamposts', 'feed')}" class="feedlink"/>
+      </h2>
+
+      ${postlist(teamposts)}
+    </div>
   </body>
 </html>

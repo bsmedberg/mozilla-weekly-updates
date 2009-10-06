@@ -1,4 +1,4 @@
-<!-- -*- Mode: XML -*- -->
+<!-- -*- Mode: xml -*- -->
 <html xmlns="http://www.w3.org/1999/xhtml"
       xmlns:py="http://genshi.edgewall.org/"
       xmlns:xi="http://www.w3.org/2001/XInclude">
@@ -8,13 +8,16 @@
     <title>Error</title>
   </head>
   <body>
-    <h1>Error</h1>
+    <div class="keeptogether">
+      <h1>Error</h1>
 
-    <p>Hrmph, there was an error! It's probably not your fault, but I don't
-    know what to do next!</p>
+      <p>Hrmph, there was an error! It's probably not your fault, but
+        I don't know what to do next. You might want to try the usual
+        stuff, like going back, hitting Reload, or throwing up your
+        hands and screaming.</p>
 
-    <p>Status: ${status}<br/>
-    Message: ${message}</p>
-
+      <p>Status: ${status}<br/>
+        Message: ${message}</p>
+    </div>
   </body>
 </html>

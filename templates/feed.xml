@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<feed xmlns="http://www.w3.org/2005/Atom"
+      xmlns:py="http://genshi.edgewall.org/"
+      xmlns:xi="http://www.w3.org/2001/XInclude">
+  <xi:include href="common.xhtml"/>
+  <title>${title}</title>
+
+  <link href="${cherrypy.url()}" rel="self"/>
+  <link href="${feedurl}" rel="alternate" type="text/html"/>
+
+  <id>tag:${feedtag}:main</id>
+  <updated>${feeddate(max([post.posttime for post in feedposts]))}</updated>
+
+  <author>
+    <name>Mozilla Status Board</name>
+  </author>
+
+  <entry py:for="post in feedposts">
+    <title>${post.username} Status Update: ${post.postdate.isoformat()}</title>
+    <id>tag:${feedtag}:${post.username}:${post.postdate.isoformat()}</id>
+    <updated>${feeddate(post.posttime)}</updated>
+    <author>
+      <name>${post.username}</name>
+      <uri>${genlink('user', post.username)}</uri>
+    </author>
+    <content type="xhtml">
+      <div xmlns="http://www.w3.org/1999/xhtml" class="postdata">
+          <div class="completed" py:if="post.completed is not None">
+            <h4 class="posthead">Done:</h4> ${post.completed}
+          </div>
+
+          <div class="planned" py:if="post.planned is not None">
+            <h4 class="posthead">Next:</h4> ${post.planned}
+          </div>
+
+          <div class="tags" py:if="post.tags is not None">
+            <h4 class="posthead">Tags:</h4> ${post.tags}
+          </div>
+      </div>
+    </content>
+  </entry>
+</feed>

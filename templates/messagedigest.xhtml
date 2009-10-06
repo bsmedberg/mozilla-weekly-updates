@@ -1,0 +1,13 @@
+<!-- -*- Mode: XML -*- -->
+<div xmlns="http://www.w3.org/1999/xhtml"
+     xmlns:py="http://genshi.edgewall.org/"
+     xmlns:xi="http://www.w3.org/2001/XInclude">
+  <xi:include href="common.xhtml"/>
+
+  <h1>${subject}</h1>
+
+  <py:for each="post in posts">
+    ${postdetail(post, showuser=True, showdate=True)}
+    <hr/>
+  </py:for>
+</div>

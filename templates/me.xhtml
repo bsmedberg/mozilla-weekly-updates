@@ -7,41 +7,39 @@
   <head>
     <title>My Status</title>
   </head>
-  <body>
-    <div class="columns">
-      <div class="keeptogether">
-        <h2><a href="${genlink('user', loginname, 'teamupdates')}">Team Reports</a> <a href="${genlink('user', loginname, 'teamupdates', 'feed')}" class="feedlink"><img class="feedicon" src="${genlink('static/feed-icon-14x14.png')}" height="14" width="14"/></a></h2>
-
-        ${postlist(projectposts)}
-      </div>
-
-      <div class="keeptogether">
-        <h2>Current Status</h2>
-        ${postdetail(posts[0], showuser=False)}
-      </div>
-
-      <div class="keeptogether">
-        <h2 py:choose="thispost.postdate">
-          <py:when test="None">New Status Report</py:when>
-          <py:otherwise>Edit Today's Status</py:otherwise>
-        </h2>
-        ${editpost(thispost)}
-      </div>
-
-      <div class="keeptogether" py:if="len(posts) > 1">
-        <h3>Older Posts</h3>
-        <ol>
-          <li py:for="post in posts[1:]"><a href="${genlink('post', post.postdate.toordinal())}">post.postdate.isoformat()</a></li>
-        </ol>
-      </div>
-    </div>
-
+  <body class="nocols">
     <h2>Preferences</h2>
 
-    <form action="${genlink('me')}" method="POST">
+    <form action="${genlink('preferences')}" method="POST">
       <h3>Email</h3>
 
-      <p><label for="email">Email</label><input id="email" type="text" name="email" size="30" value="${email}" /></p>
+      <p><label for="email">Email</label><input id="email" type="text" name="email" size="30" value="${email}"
+                                                autocomplete="${email == '' and 'off' or ''}"/>
+        <em>Optional. Your email will be available to other logged-in users.</em>
+      </p>
+
+      <p><label for="reminderday">Nagging</label>
+        <select id="reminderday" name="reminderday"
+                initialvalue="${('-', reminderday)[reminderday is not None]}">
+          <option value="-">(No thanks)</option>
+          <option value="0">Monday</option>
+          <option value="1">Tuesday</option>
+          <option value="2">Wednesday</option>
+          <option value="3">Thursday</option>
+          <option value="4">Friday</option>
+        </select>
+        <em>Send me a reminder email if I haven't posted in the last week.</em>
+      </p>
+
+      <p><label for="sendemail">Team Update Emails</label>
+        <select id="sendemail" name="sendemail"
+                initialvalue="${('-', sendemail)[sendemail is not None]}">
+          <option value="-">(No thanks)</option>
+          <option value="0">Immediately</option>
+          <option value="1">Once a day</option>
+          <option value="2">Once a week on Tuesday</option>
+        </select>
+      </p>
 
       <h3>Change Password</h3>
 

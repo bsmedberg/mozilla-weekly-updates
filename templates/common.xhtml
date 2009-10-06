@@ -1,71 +1,98 @@
-<!-- -*- Mode: XML -*- -->
-<?python from urllib import quote, urlencode ?>
+<!--! -*- Mode: XML -*- -->
+<?python
+from urllib import quote, urlencode
+from util import feeddate
+import cherrypy
+?>
 <div xmlns="http://www.w3.org/1999/xhtml"
      xmlns:py="http://genshi.edgewall.org/"
      py:strip="True">
-  <py:def function="genlink(*paths, **params)">${baseurl}/${'/'.join([quote(str(path)) for path in paths])}<py:if test="len(params)">?${urlencode(params)}</py:if></py:def>
+  <py:def function="genlink(*paths, **params)">${cherrypy.url('/%s' % '/'.join([quote(str(path)) for path in paths]))}<py:if test="len(params)">?${urlencode(params)}</py:if></py:def>
 
   <head py:match="head">
     ${select("*|text()")}
-    <link type="text/css" rel="stylesheet" href="${baseurl}/static/ui.css" />
+    <link type="text/css" rel="stylesheet" href="${cherrypy.url('/static/ui.css')}" />
   </head>
 
-  <body py:match="body">
-    <div class="header">
-      <a href="${genlink('')}">Weekly Updates</a> |
+  <body py:match="body" class="normalcols" py:attrs="select('@*')">
+    <div id="header">
+      <a href="${genlink('')}">Mozilla Status Board</a> |
       <py:choose test="loginname">
         <py:when test="None">
           <a href="${genlink('login')}">Log in</a> |
-          <a href="${genlink('createuser')}">Create User</a>
+          <a href="${genlink('signup')}">Sign Up</a>
         </py:when>
         <py:otherwise>
-          <a href="${genlink('me')}">${loginname}</a> |
-          <a href="${genlink('post')}">New Post</a> |
+          ${loginname}: <a href="${genlink('preferences')}">Settings</a> |
           <form id="logout" action="${genlink('logout')}" method="POST"><input id="logout-button" type="submit" value="Log out"/></form>
         </py:otherwise>
       </py:choose>
     </div>
+    <div id="content">
     ${select("*|text()")}
+    </div>
   </body>
 
-  <div py:def="postdetail(post, showuser=True, cssclass='postdetail')"
+  <a py:match="a[@class='feedlink']" py:attrs="select('@*')" type="application/atom+xml">
+    <img class="feedicon" src="${genlink('static/feed-icon-14x14.png')}" height="14" width="14"/>
+  </a>
+
+  <select py:match="select[@initialvalue]"
+          py:with="selectvalue=str(select('@initialvalue'))"
+          py:attrs="select('@*')">
+    ${select("*|text()")}
+  </select>
+
+  <option py:match="option" py:attrs="select('@*')"
+          selected="${(selectvalue == str(select('@value'))) and 'selected' or ''}">
+    ${select("*|text()")}
+  </option>
+
+  <div py:def="postdetail(post, showuser=True, showdate=True,
+                          cssclass='postdetail bordered')"
        class="${cssclass}">
     <py:choose test="post.username">
       <py:when test="None">
         <p>No status posted</p>
       </py:when>
       <py:otherwise>
-        <p class="postinfo">Posted
-          <py:if test="showuser">by ${post.username}</py:if>
-          on ${post.postdate.isoformat()}
+        <p py:if="showdate" class="postdate">
+          Posted on ${post.postdate.isoformat()}
         </p>
+        <h3 py:if="showuser" class="postuser"><a href="${genlink('user', post.username)}">${post.username}</a></h3>
 
-        <div class="completed" py:if="post.completed is not None">
-          <h3>Done</h3>
-          <p class="userdata">${post.completed}</p>
-        </div>
+        <div class="postdata">
+          <div class="completed" py:if="post.completed is not None">
+            <h4 class="posthead">Done:</h4> ${post.getcompleted()}
+          </div>
 
-        <div class="planned" py:if="post.planned is not None">
-          <h3>Next</h3>
-          <p class="userdata">${post.planned}</p>
-        </div>
+          <div class="planned" py:if="post.planned is not None">
+            <h4 class="posthead">Next:</h4> ${post.getplanned()}
+          </div>
 
-        <div class="tags" py:if="post.tags is not None">
-          <h3>Tags</h3>
-          <p class="userdata">${post.tags}</p>
+          <div class="tags" py:if="post.tags is not None">
+            <h4 class="posthead">Tags:</h4> ${post.gettags()}
+          </div>
         </div>
       </py:otherwise>
     </py:choose>
   </div>
 
-  <div py:def="postlist(posts)" class="postlist">
+  <div py:def="postlist(posts, showuser=True)" class="postlist bordered">
     <py:for each="post in posts">
-      ${postdetail(post, cssclass='postlistdetail')}
+      ${postdetail(post, showuser=showuser, cssclass='postlistdetail')}
     </py:for>
   </div>
 
-  <form py:def="editpost(post)" class="editpost"
-        action="${genlink(post.postdate is None and 'post' or 'post/%i' % post.postdate.toordinal())}" method="POST">
+  <form py:def="loginform()" class="loginform bordered"
+        action="${genlink('login')}" method="POST">
+    <label for="username">Username</label><input id="username" type="text" name="username" size="20" /><br/>
+    <label for="password1">Password</label><input id="password1" type="password" name="password1" size="20" /><br/>
+    <input type="submit" value="Login" />
+  </form>
+
+  <form py:def="editpost(post)" class="editpost bordered"
+        action="${genlink('post')}" method="POST">
 
     <div class="fullwidth">
       <h3>Done</h3>
@@ -76,6 +103,9 @@
 
       <h3>Tags</h3>
       <p><textarea id="tags" name="tags" class="fullwidth" rows="3">${post.tags}</textarea></p>
+
+      <input py:if="post.postdate is not None"
+             type="hidden" name="isedit" value="1"/>
 
       <p><input type="submit" value="Submit" /></p>
     </div>

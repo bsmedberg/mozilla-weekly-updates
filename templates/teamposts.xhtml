@@ -1,0 +1,25 @@
+<!-- -*- Mode: XML -*- -->
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:py="http://genshi.edgewall.org/"
+      xmlns:xi="http://www.w3.org/2001/XInclude">
+  <xi:include href="common.xhtml"/>
+
+  <head>
+    <title>Mozilla Status Board: User Team: ${username}</title>
+    <link href="${genlink('user', username, 'teamposts/feed')}" type="application/atom+xml"
+          rel="alternate" title=" posts"/>
+  </head>
+  <body class="2col">
+    <h1>User Team: ${username}</h1>
+
+    <div id="col1">
+    ${postlist(teamposts)}
+    </div>
+    <div id="col2">
+      <h2>Team Members:</h2>
+      <ul class="bordered">
+        <li py:for="user, groups in team"><a href="${genlink('user', user)}">${user}</a> (${groups})</li>
+      </ul>
+    </div>
+  </body>
+</html>

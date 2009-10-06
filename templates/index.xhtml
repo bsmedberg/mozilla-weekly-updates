@@ -5,13 +5,56 @@
   <xi:include href="common.xhtml"/>
 
   <head>
-    <title>Weekly Updates for Mozilla Projects</title>
+    <title>Mozilla Status Board</title>
   </head>
-  <body>
-    <h1>Available Projects</h1>
+  <body class="2col">
+    <div id="col1">
+      <py:if test="loginname is None">
+        <h2>Login</h2>
+        ${loginform()}
+      </py:if>
 
-    <ul>
-      <li py:for="project in projects"><a href="project/${project}">${project}</a></li>
-    </ul>
+      <py:if test="loginname is not None">
+        <h2>Current Status
+          <span class="subhead" py:if="userposts[0].postdate is not None">
+            - Posted on ${userposts[0].postdate.isoformat()}
+          </span>
+        </h2>
+        ${postdetail(userposts[0], showuser=False, showdate=False)}
+
+        <h2 py:choose="todaypost.postdate">
+          <py:when test="None">New Status Report</py:when>
+          <py:otherwise>Edit Today's Status</py:otherwise>
+        </h2>
+        ${editpost(todaypost)}
+      </py:if>
+
+      <h2>All Projects</h2>
+      <ul class="bordered">
+        <li py:for="project in projects"><a href="${genlink('project', project)}">${project}</a></li>
+      </ul>
+    </div>
+    <div id="col2">
+      <py:if test="loginname is not None">
+        <h2><a href="${genlink('user', loginname, 'teamposts')}">Your Team Posts</a>
+          <a href="${genlink('user', loginname, 'teamposts', 'feed')}" class="feedlink"/>
+        </h2>
+
+        ${postlist(teamposts)}
+      </py:if>
+      <py:if test="loginname is None">
+        <h2><a href="${genlink('posts')}">Recent Posts (All Users)</a>
+          <a href="${genlink('posts/feed')}" class="feedlink"/>
+        </h2>
+
+        ${postlist(recent)}
+      </py:if>
+
+      <h2>All Users</h2>
+      <ul class="bordered">
+        <li py:for="user in users"><a href="${genlink('user', user)}">${user}</a></li>
+      </ul>
+    </div>
+
   </body>
 </html>

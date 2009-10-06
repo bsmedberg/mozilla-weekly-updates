@@ -1,8 +1,9 @@
-import cherrypy, os, sqlite3
+import cherrypy, os
 from genshi.template import TemplateLoader
-from datetime import date
+import util
 from auth import require_login, logged_in, logged_out
 from post import Post
+import model, mail
 
 thisdir = os.path.abspath(os.path.dirname(__file__))
 
@@ -11,37 +12,95 @@ def init_threadlocal_db(thread_index):
 
 cherrypy.engine.subscribe('start_thread', init_threadlocal_db)
 
-def get_cursor():
+class CursorWrapper(object):
+    def __init__(self, parent):
+        self.parent = parent
+
+    def execute(self, q, *args):
+        q = q.replace('?', '%s')
+        self.parent.execute(q, *args)
+
+    def executemany(self, q, *args):
+        q = q.replace('?', '%s')
+        self.parent.executemany(q, *args)
+
+    def fetchone(self):
+        return self.parent.fetchone()
+
+    def fetchall(self):
+        return self.parent.fetchall()
+
+    def close(self):
+        self.parent.close()
+        self.parent = None
+
+def get_cursor(app=None):
+    if app is None:
+        app = cherrypy.request.app
     if cherrypy.thread_data.weeklydb is None:
-        db = sqlite3.connect(cherrypy.request.app.config['weeklyupdates']['database.file'])
+        type = app.config['weeklyupdates']['database.type']
+        if type == 'sqlite3':
+            import sqlite3
+            db = sqlite3.connect(app.config['weeklyupdates']['database.file'])
+            cherrypy.thread_data.weeklydb_wrap = False
+        elif type == 'MySQLdb':
+            import MySQLdb
+            db = MySQLdb.connect(**app.config['weeklyupdates']['database.connect.args'])
+            cherrypy.thread_data.weeklydb_wrap = True
+        else:
+            raise Exception("Unrecognized database.type")
+
         cherrypy.thread_data.weeklydb = db
-    return (cherrypy.thread_data.weeklydb,
-            cherrypy.thread_data.weeklydb.cursor())
+
+    db = cherrypy.thread_data.weeklydb
+    cur = db.cursor()
+    if cherrypy.thread_data.weeklydb_wrap:
+        cur = CursorWrapper(cur)
+    return db, cur
 
 loader = TemplateLoader(os.path.join(thisdir, 'templates'), auto_reload=True)
 def render(name, **kwargs):
     t = loader.load(name)
-    return t.generate(baseurl=cherrypy.request.app.script_name, loginname=cherrypy.request.loginname,
+    return t.generate(loginname=cherrypy.request.loginname,
                       **kwargs).render('html')
 
-def get_projects(cur):
-    cur.execute('''SELECT projectname FROM projects ORDER BY projectname''')
-    return [project for project, in cur.fetchall()]
+def renderatom(**kwargs):
+    t = loader.load('feed.xml')
+    cherrypy.response.headers['Content-Type'] = 'application/atom+xml'
+    return t.generate(loginname=cherrypy.request.loginname,
+                      feedtag=cherrypy.request.app.config['weeklyupdates']['feed.tag.domain'],
+                      **kwargs).render('xml')
 
 class Root(object):
     def index(self):
+        username = cherrypy.request.loginname
+
         db, cur = get_cursor()
-        projects = get_projects(cur)
+        projects = model.get_projects(cur)
+        users = model.get_users(cur)
+        recent = model.get_recentposts(cur)
 
-        cur.execute('''SELECT username FROM users ORDER BY username''')
-        users = [user for user, in cur.fetchall()]
-
-        # cur.execute('''SELECT username, postdate, completed, planned, tags
-        #                FROM posts
-        #                WHERE postdate = SELECT (MAX(postdate) FROM
+        if username is None:
+            teamposts = None
+            userposts = None
+            todaypost = None
+        else:
+            teamposts = model.get_teamposts(cur, username)
+            userposts, todaypost = model.get_user_posts(cur, username)
 
         cur.close()
-        return render('index.xhtml', projects=projects, users=users)
+        return render('index.xhtml', projects=projects, users=users, recent=recent,
+                      teamposts=teamposts, userposts=userposts, todaypost=todaypost)
+
+    def feed(self):
+        db, cur = get_cursor()
+
+        feedposts = model.get_feedposts(cur)
+
+        cur.close()
+        return renderatom(feedposts=feedposts,
+                          feedurl=cherrypy.url('/feed'),
+                          title="Mozilla Status Board Updates: All Users")
 
     def signup(self, **kwargs):
         db, cur = get_cursor()
@@ -51,17 +110,36 @@ class Root(object):
             if username == '':
                 raise cherrypy.HTTPError(409, "Cannot have an empty username")
 
+            if username.startswith('!'):
+                raise cherrypy.HTTPError(409, "Username must not start with !")
+
             cur.execute('SELECT username FROM users WHERE username = ?',
                         (username,))
             if cur.fetchone() is not None:
                 raise cherrypy.HTTPError(409, "There is already a user of that name")
 
-            email = kwargs.pop('email') or None
+            email = kwargs.pop('email')
+            email = (None, email)[email is not None]
+
+            reminderday = kwargs.pop('reminderday')
+            if reminderday == '-':
+                reminderday = None
+            else:
+                reminderday = int(reminderday)
+
+            sendemail = kwargs.pop('sendemail')
+            if sendemail == '-':
+                sendemail = None
+            else:
+                sendemail = int(sendemail)
 
             password = kwargs.pop('password1')
             password2 = kwargs.pop('password2')
             if password != password2:
                 raise cherrypy.HTTPError(409, "The passwords didn't match")
+
+            if kwargs.pop('globalpass') != cherrypy.request.app.config['weeklyupdates']['globalpass']:
+                raise cherrypy.HTTPError(409, "The global password is incorrect")
 
             projects = []
             for k, v in kwargs.iteritems():
@@ -69,19 +147,19 @@ class Root(object):
                     project = k[8:]
                     projects.append(project)
 
-            cur.execute('''INSERT INTO users (username, email, password)
-                        VALUES (?, ?, ?)''',
-                        (username, email, password))
+            cur.execute('''INSERT INTO users (username, email, password, reminderday, sendemail)
+                        VALUES (?, ?, ?, ?, ?)''',
+                        (username, email, password, reminderday, sendemail))
             cur.executemany('''INSERT INTO userprojects
                                (projectname, username)
-                               SELECT projectname, projectname FROM projects
+                               SELECT projectname, ? FROM projects
                                WHERE projectname = ?''',
-                            [(project,) for project in projects])
+                            [(username, project) for project in projects])
             db.commit()
 
-            raise cherrypy.HTTPRedirect("%s/login" % cherrypy.request.app.script_name)
+            raise cherrypy.HTTPRedirect(cherrypy.url('/login'))
 
-        projects = get_projects(cur)
+        projects = model.get_projects(cur)
 
         cur.close()
         return render('signup.xhtml', projects=projects)
@@ -100,13 +178,14 @@ class Root(object):
                 raise cherrypy.HTTPError(409, "Invalid username/password")
 
         if cherrypy.request.loginname is not None:
-            raise cherrypy.HTTPRedirect("%s/me" % cherrypy.request.app.script_name)
+            raise cherrypy.HTTPRedirect(cherrypy.url('/'))
 
+        cur.close()
         return render('login.xhtml')
 
     def logout(self, **kwargs):
         logged_out()
-        raise cherrypy.HTTPRedirect("%s/" % cherrypy.request.app.script_name)
+        raise cherrypy.HTTPRedirect(cherrypy.url('/'))
 
     def user(self, username):
         db, cur = get_cursor()
@@ -115,26 +194,68 @@ class Root(object):
         if cur.fetchone() is None:
             raise cherrypy.HTTPError(404, "User not found")
 
-        cur.execute('''SELECT projectname FROM userprojects
-                       WHERE username = ?''',
-                    (username,))
-        projects = [project for project, in cur.fetchall()]
+        userposts, thispost = model.get_user_posts(cur, username)
+
+        projects = model.get_userprojects(cur, username)
+        teamposts = model.get_teamposts(cur, username)
 
         cur.close()
-        return render('user.xhtml', projects=projects, username=username)
+        return render('user.xhtml', username=username, projects=projects,
+                      teamposts=teamposts, userposts=userposts)
+
+    def userposts(self, username):
+        db, cur = get_cursor()
+
+        posts = model.get_all_userposts(cur, username)
+        if not len(posts):
+            raise cherry.HTTPError(404, "No posts found")
+
+        cur.close()
+        return render('userposts.xhtml', username=username, posts=posts)
+
+    def userpostsfeed(self, username):
+        db, cur = get_cursor()
+
+        feedposts, thispost = model.get_user_posts(cur, username)
+
+        cur.close()
+        return renderatom(feedposts=feedposts,
+                          feedurl=cherrypy.url('/feed/%s' % username),
+                          title="Mozilla Status Board Updates: user %s" % username)
+
+    def userteamposts(self, username):
+        db, cur = get_cursor()
+
+        teamposts = model.get_teamposts(cur, username)
+        team = model.get_userteam(cur, username)
+
+        cur.close()
+        return render('teamposts.xhtml', username=username,
+                      teamposts=teamposts, team=team)
+
+    def userteampostsfeed(self, username):
+        db, cur = get_cursor()
+
+        teamposts = model.get_teamposts(cur, username)
+
+        cur.close()
+        return renderatom(feedposts=teamposts,
+                          feedurl=cherrypy.url('/user/%s/teamposts/feed' % username),
+                          title="Mozilla Status Board Updates: User Team: %s" % username)
 
     @require_login
-    def me(self, **kwargs):
+    def preferences(self, **kwargs):
         user = cherrypy.request.loginname
 
         db, cur = get_cursor()
-        cur.execute('''SELECT email FROM users WHERE username = ?''',
+        cur.execute('''SELECT email, reminderday, sendemail
+                       FROM users WHERE username = ?''',
                     (user,))
         r = cur.fetchone()
         if r is None:
             raise cherrypy.HTTPError(404, "User not found")
 
-        email, = r
+        email, reminderday, sendemail = r
 
         if cherrypy.request.method.upper() == 'POST':
             oldpassword = kwargs.pop('oldpassword')
@@ -152,10 +273,29 @@ class Root(object):
                     raise cherrypy.HTTPError(409, "The passwords don't match")
 
                 if password != '':
-                    cur.execute('''UPDATE users SET password = ?''', (password,))
+                    cur.execute('''UPDATE users
+                                   SET password = ?
+                                   WHERE username = ?''', (password, user))
 
             email = kwargs.pop('email')
-            cur.execute('''UPDATE users SET email = ?''', (email or None,))
+            email = (None, email)[email is not None]
+
+            reminderday = kwargs.pop('reminderday')
+            if reminderday == '-':
+                reminderday = None
+            else:
+                reminderday = int(reminderday)
+
+            sendemail = kwargs.pop('sendemail')
+            if sendemail == '-':
+                sendemail = None
+            else:
+                sendemail = int(sendemail)
+
+            cur.execute('''UPDATE users
+                           SET email = ?, reminderday = ?, sendemail = ?
+                           WHERE username = ?''',
+                        (email, reminderday, sendemail, user))
 
             projectdata = []
             for k, v in kwargs.iteritems():
@@ -168,18 +308,6 @@ class Root(object):
             cur.executemany('''INSERT INTO userprojects (username, projectname) VALUES (?, ?)''', projectdata)
             db.commit()
 
-        cur.execute('''SELECT username, postdate, completed, planned, tags
-                       FROM posts
-                       WHERE username = ?
-                       ORDER BY postdate DESC LIMIT 10''', (user,))
-        posts = [Post(r) for r in cur.fetchall()]
-        if not len(posts):
-            posts.append(Post(None))
-            thispost = Post(None)
-        elif posts[0].postdate == date.today():
-            thispost = posts[0]
-        else:
-            thispost = Post(None)
 
         cur.execute('''SELECT projectname,
                          EXISTS(SELECT * FROM userprojects
@@ -189,84 +317,80 @@ class Root(object):
                     (user,))
         projects = cur.fetchall()
 
-        cur.execute('''SELECT username, postdate, completed, planned, tags
-                       FROM posts
-                       WHERE postdate = (SELECT MAX(postdate)
-                                         FROM posts AS p2
-                                         WHERE p2.username = posts.username)
-                         AND EXISTS(SELECT * FROM userprojects AS u1, userprojects AS u2
-                                    WHERE u1.projectname = u2.projectname
-                                      AND u1.username = posts.username
-                                      AND u2.username = ?)
-                         ORDER BY postdate DESC''', (user,))
-        projectposts = [Post(d) for d in cur.fetchall()]
 
         cur.close()
-        return render('me.xhtml', email=email or '', projects=projects, posts=posts, thispost=thispost, projectposts=projectposts)
+        return render('me.xhtml', email=email, reminderday=reminderday,
+                      sendemail=sendemail, projects=projects)
 
     @require_login
-    def post(self, postdate=None, **kwargs):
+    def post(self, completed, planned, tags, isedit=False):
         user = cherrypy.request.loginname
 
         db, cur = get_cursor()
 
-        if cherrypy.request.method.upper() == 'POST':
-            completed = kwargs.get('completed') or None
-            planned = kwargs.get('planned') or None
-            tags = kwargs.get('tags') or None
+        assert cherrypy.request.method.upper() == 'POST'
 
-            if postdate is None:
-                cur.execute('''INSERT INTO posts
-                               (username, postdate, completed, planned, tags)
-                               VALUES (?, ?, ?, ?, ?)''',
-                            (user, date.today().toordinal(), completed, planned, tags))
-            else:
-                cur.execute('''UPDATE posts
-                               SET completed = ?, planned = ?, tags = ?
-                               WHERE username = ? AND postdate = ?''',
-                            (completed, planned, tags, user, postdate))
-                if cur.rowcount == 0:
-                    raise cherrypy.HTTPError(409, "A post never existed on this date")
+        cur.execute('''SELECT email
+                       FROM users
+                       WHERE username = ?''',
+                    (user,))
+        email, = cur.fetchone()
 
-            db.commit()
-            raise cherrypy.HTTPRedirect("%s/me" % cherrypy.request.app.script_name)
+        completed = completed or None
+        planned = planned or None
+        tags = tags or None
 
+        today = util.today().toordinal()
+        now = util.now()
 
-        if postdate is None:
-            thispost = Post(None)
-            cur.execute('''SELECT username, postdate, completed, planned, tags
-                           FROM posts
+        if isedit:
+            cur.execute('''UPDATE posts
+                           SET completed = ?, planned = ?, tags = ?, posttime = ?
                            WHERE username = ?
-                           ORDER BY postdate DESC LIMIT 1''', (user,))
-            lastpost = Post(cur.fetchone())
-            if lastpost.postdate == date.today():
-                raise cherrypy.HTTPRedirect('%s/post/%i' % (cherrypy.request.app.script_name, lastpost.postdate.toordinal()))
-        else:
-            lastpost = Post(None)
-            cur.execute('''SELECT username, postdate, completed, planned, tags
-                           FROM posts
-                           WHERE username = ?
-                             AND postdate = ?''', (user, int(postdate)))
-            thispost = Post(cur.fetchone())
-            if thispost.postdate is None:
-                raise cherrypy.HTTPError(404, "Post on %s not found" % date.fromordinal(int(postdate)).isoformat())
-
-        cur.execute('''SELECT username, postdate, completed, planned, tags
-                       FROM posts
-                       WHERE EXISTS (SELECT *
-                                     FROM userprojects AS u1, userprojects AS u2
-                                     WHERE u1.projectname = u2.projectname
-                                       AND u1.username = posts.username
-                                       AND u2.username = ?)
-                       AND posts.postdate = (SELECT max(p2.postdate)
+                             AND postdate = (SELECT MAX(postdate)
                                              FROM posts AS p2
-                                             WHERE p2.username = posts.username)
-                       ORDER by postdate''', (user,))
-        projectposts = [(username, date.fromordinal(postdate), completed, planned, tags)
-                        for username, postdate, completed, planned, tags in cur.fetchall()]
+                                             WHERE p2.username = posts.username)''',
+                        (completed, planned, tags, now, user))
+            print "Rows updated: %s" % cur.rowcount
+        else:
+            cur.execute('''INSERT INTO posts
+                           (username, postdate, posttime, completed, planned, tags)
+                           VALUES (?, ?, ?, ?, ?, ?)''',
+                        (user, today, now, completed, planned, tags))
+
+        db.commit()
+
+        allteam, sendnow = model.get_userteam_emails(cur, user)
+        mail.sendpost(email, allteam, sendnow,
+                      Post((user, today, now, completed, planned, tags)))
+
+        raise cherrypy.HTTPRedirect(cherrypy.url('/'))
+
+    def project(self, projectname):
+        db, cur = get_cursor()
+
+        cur.execute('''SELECT projectname FROM projects WHERE projectname = ?''',
+                    (projectname,))
+        if cur.fetchone() is None:
+            raise HTTPError(404, "Project not found")
+
+        users = model.get_project_users(cur, projectname)
+        posts = model.get_project_posts(cur, projectname)
+        late = model.get_project_late(cur, projectname)
 
         cur.close()
-        return render('post.xhtml', thispost=thispost, lastpost=lastpost, projectposts=projectposts)
+        return render('project.xhtml', projectname=projectname, users=users,
+                      posts=posts, late=late)
+
+    def projectfeed(self, projectname):
+        db, cur = get_cursor()
+
+        posts = model.get_project_posts(cur, projectname)
+
+        cur.close()
+        return renderatom(feedposts=posts,
+                          feedurl=cherrypy.url('/project/%s' % projectname),
+                          title="Mozilla Status Board Updates: Project %s" % projectname)
 
 dispatcher = cherrypy.dispatch.RoutesDispatcher()
 dispatcher.controllers['root'] = Root()
@@ -277,14 +401,19 @@ def connect(route, action, methods=('GET'), **kwargs):
     dispatcher.mapper.connect(route, controller='root', action=action, conditions=c, **kwargs)
 
 connect('/', 'index')
-connect('/signup', 'signup')
+connect('/signup', 'signup', methods=('GET', 'POST'))
 connect('/login', 'login', methods=('GET', 'POST'))
 connect('/logout', 'logout', methods=('POST',))
+connect('/post', 'post', methods=('POST',))
+connect('/preferences', 'preferences', methods=('GET', 'POST'))
+connect('/feed', 'feed')
 connect('/user/{username}', 'user')
-connect('/user/{username}/feed', 'userfeed')
-connect('/user/{username}/project-feed', 'userprojectfeed')
-connect('/projects/{projectname}', 'project')
-connect('/projects/{projectname}/feed', 'projectfeed')
+connect('/user/{username}/posts', 'userposts')
+connect('/user/{username}/posts/feed', 'userpostsfeed')
+connect('/user/{username}/teamposts', 'userteamposts')
+connect('/user/{username}/teamposts/feed', 'userteampostsfeed')
+connect('/project/{projectname}', 'project')
+connect('/project/{projectname}/feed', 'projectfeed')
 
 def render_error(**kwargs):
     return render('error.xhtml', **kwargs)

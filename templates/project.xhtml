@@ -1,0 +1,36 @@
+<!-- -*- Mode: XML -*- -->
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:py="http://genshi.edgewall.org/"
+      xmlns:xi="http://www.w3.org/2001/XInclude">
+  <xi:include href="common.xhtml"/>
+
+  <head>
+    <title>Mozilla Status Board: Project: ${projectname}</title>
+    <link href="${genlink('project', projectname, 'feed')}" type="application/atom+xml"
+          rel="alternate" title="All project posts"/>
+  </head>
+  <body class="2col">
+    <h1>Project: ${projectname}</h1>
+
+    <div id="col1">
+    ${postlist(posts)}
+    </div>
+
+    <div id="col2">
+      <h2>Team Members:</h2>
+      <ul class="bordered">
+        <li py:for="user in users"><a href="${genlink('user', user)}">${user}</a></li>
+      </ul>
+
+      <h2>Who's <span title="Who hasn't posted an update in the last week?">Late?</span></h2>
+      <p py:if="not len(late)"><em>Everybody's up to date!</em></p>
+      <ul py:if="len(late)" class="bordered">
+        <li py:for="username, lastpostdate in late"><a href="${genlink('user', username)}">${username}</a>:
+          <em py:if="lastpostdate is None">Never posted</em>
+          <em py:if="lastpostdate">Last posted on ${lastpostdate.isoformat()}</em>
+        </li>
+      </ul>
+    </div>
+
+  </body>
+</html>
