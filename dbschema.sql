@@ -1,8 +1,3 @@
-CREATE TABLE IF NOT EXISTS projects
-(
-  projectname VARCHAR(80) NOT NULL PRIMARY KEY
-) ENGINE=InnoDB;
-
 CREATE TABLE IF NOT EXISTS users
 (
   username VARCHAR(80) NOT NULL PRIMARY KEY,
@@ -10,6 +5,13 @@ CREATE TABLE IF NOT EXISTS users
   password VARCHAR(80) NULL,
   reminderday TINYINT NULL,
   sendemail TINYINT NULL
+) ENGINE=InnoDB;
+
+CREATE TABLE IF NOT EXISTS projects
+(
+  projectname VARCHAR(80) NOT NULL PRIMARY KEY,
+  createdby VARCHAR(80) NOT NULL,
+  CONSTRAINT projects_createdby_fkey FOREIGN KEY (createdby) REFERENCES users (username)
 ) ENGINE=InnoDB;
 
 CREATE TABLE IF NOT EXISTS userprojects
@@ -25,7 +27,7 @@ CREATE TABLE IF NOT EXISTS posts
 (
   username VARCHAR(80) NOT NULL,
   postdate INTEGER NOT NULL,
-  posttime TIMESTAMP NOT NULL,
+  posttime INTEGER NOT NULL,
   lastupdated INTEGER NOT NULL,
   completed TEXT,
   planned TEXT,

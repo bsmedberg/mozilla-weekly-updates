@@ -375,13 +375,33 @@ class Root(object):
 
         raise cherrypy.HTTPRedirect(cherrypy.url('/'))
 
+    @require_login
+    def createproject(self, projectname):
+        username = cherrypy.request.loginname
+
+        if len(projectname) < 3:
+            raise cherrypy.HTTPError(409, "Project name is not long enough")
+
+        db, cur = get_cursor()
+
+        cur.execute('''INSERT INTO projects (projectname, createdby)
+                       VALUES (?, ?)''',
+                    (projectname, username))
+        cur.execute('''INSERT INTO userprojects (username, projectname)
+                       VALUES (?, ?)''',
+                    (username, projectname))
+        db.commit()
+
+        cur.close()
+        raise cherrypy.HTTPRedirect(cherrypy.url('/project/%s' % projectname))
+
     def project(self, projectname):
         db, cur = get_cursor()
 
         cur.execute('''SELECT projectname FROM projects WHERE projectname = ?''',
                     (projectname,))
         if cur.fetchone() is None:
-            raise HTTPError(404, "Project not found")
+            raise cherrypy.HTTPError(404, "Project not found")
 
         users = model.get_project_users(cur, projectname)
         posts = model.get_project_posts(cur, projectname)
@@ -421,6 +441,7 @@ connect('/user/{username}/posts', 'userposts')
 connect('/user/{username}/posts/feed', 'userpostsfeed')
 connect('/user/{username}/teamposts', 'userteamposts')
 connect('/user/{username}/teamposts/feed', 'userteampostsfeed')
+connect('/createproject', 'createproject', methods=('POST',))
 connect('/project/{projectname}', 'project')
 connect('/project/{projectname}/feed', 'projectfeed')
 

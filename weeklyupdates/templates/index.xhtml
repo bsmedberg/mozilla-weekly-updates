@@ -33,6 +33,13 @@
       <ul class="bordered">
         <li py:for="project in projects"><a href="${genlink('project', project)}">${project}</a></li>
       </ul>
+      <form py:if="loginname is not None" action="${genlink('createproject')}"
+            method="POST">
+        <h3>Create a New Project</h3>
+        <label for="projectname">Project name:</label>
+        <input id="projectname" name="projectname" type="text" size="15"/>
+        <input type="submit" value="Create Project"/>
+      </form>
     </div>
     <div id="col2">
       <py:if test="loginname is not None">
