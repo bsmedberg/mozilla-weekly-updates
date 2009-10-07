@@ -27,15 +27,15 @@
     <content type="xhtml">
       <div xmlns="http://www.w3.org/1999/xhtml" class="postdata">
           <div class="completed" py:if="post.completed is not None">
-            <h4 class="posthead">Done:</h4> ${post.completed}
+            <h4 class="posthead">Done:</h4> ${post.getcompleted()}
           </div>
 
           <div class="planned" py:if="post.planned is not None">
-            <h4 class="posthead">Next:</h4> ${post.planned}
+            <h4 class="posthead">Next:</h4> ${post.getplanned()}
           </div>
 
           <div class="tags" py:if="post.tags is not None">
-            <h4 class="posthead">Tags:</h4> ${post.tags}
+            <h4 class="posthead">Tags:</h4> ${post.gettags()}
           </div>
       </div>
     </content>
