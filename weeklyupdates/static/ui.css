@@ -26,6 +26,10 @@ body {
   margin-bottom: 5px;
 }
 
+.newlines {
+  white-space: pre-line;
+}
+
 @media all and (min-width: 48em) {
   body.normalcols #content {
     column-count: 2;

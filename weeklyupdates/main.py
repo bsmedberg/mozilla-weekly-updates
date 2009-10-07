@@ -34,6 +34,10 @@ class CursorWrapper(object):
         self.parent.close()
         self.parent = None
 
+    @property
+    def rowcount(self):
+        return self.parent.rowcount
+
 def get_cursor(app=None):
     if app is None:
         app = cherrypy.request.app
@@ -347,10 +351,14 @@ class Root(object):
             cur.execute('''UPDATE posts
                            SET completed = ?, planned = ?, tags = ?, posttime = ?
                            WHERE username = ?
-                             AND postdate = (SELECT MAX(postdate)
-                                             FROM posts AS p2
-                                             WHERE p2.username = posts.username)''',
-                        (completed, planned, tags, now, user))
+                             AND postdate = (
+                               SELECT lastpostdate FROM (
+                                 SELECT MAX(postdate) AS lastpostdate
+                                 FROM posts AS p2
+                                 WHERE p2.username = ?
+                               ) AS maxq
+                             )''',
+                        (completed, planned, tags, now, user, user))
             print "Rows updated: %s" % cur.rowcount
         else:
             cur.execute('''INSERT INTO posts
@@ -361,8 +369,9 @@ class Root(object):
         db.commit()
 
         allteam, sendnow = model.get_userteam_emails(cur, user)
-        mail.sendpost(email, allteam, sendnow,
-                      Post((user, today, now, completed, planned, tags)))
+        if len(sendnow):
+            mail.sendpost(email, allteam, sendnow,
+                          Post((user, today, now, completed, planned, tags)))
 
         raise cherrypy.HTTPRedirect(cherrypy.url('/'))
 

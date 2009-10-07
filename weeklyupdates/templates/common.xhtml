@@ -62,15 +62,15 @@ import cherrypy
         <h3 py:if="showuser" class="postuser"><a href="${genlink('user', post.username)}">${post.username}</a></h3>
 
         <div class="postdata">
-          <div class="completed" py:if="post.completed is not None">
+          <div class="completed newlines" py:if="post.completed is not None">
             <h4 class="posthead">Done:</h4> ${post.getcompleted()}
           </div>
 
-          <div class="planned" py:if="post.planned is not None">
+          <div class="planned newlines" py:if="post.planned is not None">
             <h4 class="posthead">Next:</h4> ${post.getplanned()}
           </div>
 
-          <div class="tags" py:if="post.tags is not None">
+          <div class="tags newlines" py:if="post.tags is not None">
             <h4 class="posthead">Tags:</h4> ${post.gettags()}
           </div>
         </div>
