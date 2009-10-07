@@ -90,7 +90,7 @@ def get_userteam_emails(cur, username):
     cur.execute('''SELECT email, sendemail
                    FROM users
                    WHERE EXISTS(SELECT *
-                                FROM userprojects AS u1, userprojects AS u2, users
+                                FROM userprojects AS u1, userprojects AS u2
                                 WHERE u1.username = ?
                                   AND u2.projectname = u1.projectname
                                   AND u2.username = users.username)
