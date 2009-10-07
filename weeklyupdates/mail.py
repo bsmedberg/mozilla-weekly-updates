@@ -73,18 +73,20 @@ def getdaily(cur):
     yesterday = util.today() - datetime.timedelta(1)
 
     for username, email, posts in model.iter_daily(cur, yesterday):
-        yield getdigest(email, "Status Updates for %s" % yesterday.isoformat(),
-                        posts)
+        if len(posts):
+            yield getdigest(email,
+                            "Status Updates for %s" % yesterday.isoformat(),
+                            posts)
 
 def getweekly(cur):
     yesterday = util.today() - datetime.timedelta(1)
     lastweek = util.today() - datetime.timedelta(7)
 
     for username, email, posts in model.iter_weekly(cur, lastweek, yesterday):
-        yield getdigest(email,
-                        "Status Updates for %s through %s" % (lastweek.isoformat(),
-                                                              yesterday.isoformat()),
-                        posts)
+        if len(posts):
+            subject = "Status Updates for %s through %s" % \
+                (lastweek.isoformat(), yesterday.isoformat()),
+            yield getdigest(email, subject, posts)
 
 def sendtodaysmail(app):
     db, cur = main.get_cursor(app)
