@@ -1,6 +1,6 @@
 import sys
 import cherrypy
-from main import Application
+from weeklyupdates import Application
 from optparse import OptionParser
 
 o = OptionParser()
