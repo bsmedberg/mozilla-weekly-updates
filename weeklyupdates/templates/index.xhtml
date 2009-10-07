@@ -50,8 +50,8 @@
         ${postlist(teamposts)}
       </py:if>
       <py:if test="loginname is None">
-        <h2><a href="${genlink('posts')}">Recent Posts (All Users)</a>
-          <a href="${genlink('posts/feed')}" class="feedlink"/>
+        <h2>Recent Posts (All Users)
+          <a href="${genlink('feed')}" class="feedlink"/>
         </h2>
 
         ${postlist(recent)}
