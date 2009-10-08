@@ -73,7 +73,9 @@ def get_recentposts(cur):
                    WHERE postdate = (SELECT MAX(postdate)
                                      FROM posts AS p2
                                      WHERE p2.username = posts.username)
-                   ORDER BY postdate DESC, posttime DESC LIMIT 20''')
+                     AND postdate > ?
+                   ORDER BY postdate DESC, posttime DESC''',
+                (util.today().toordinal() - 15,))
     return [Post(d) for d in cur.fetchall()]
 
 def get_userprojects(cur, username):

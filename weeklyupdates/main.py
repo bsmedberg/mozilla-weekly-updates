@@ -81,19 +81,26 @@ class Root(object):
         db, cur = get_cursor()
         projects = model.get_projects(cur)
         users = model.get_users(cur)
-        recent = model.get_recentposts(cur)
 
         if username is None:
             teamposts = None
             userposts = None
             todaypost = None
+            recent = model.get_recentposts(cur)
         else:
             teamposts = model.get_teamposts(cur, username)
             userposts, todaypost = model.get_user_posts(cur, username)
+            recent = None
 
         cur.close()
         return render('index.xhtml', projects=projects, users=users, recent=recent,
                       teamposts=teamposts, userposts=userposts, todaypost=todaypost)
+
+    def posts(self):
+        db, cur = get_cursor()
+        recent = model.get_recentposts(cur)
+        cur.close()
+        return render('posts.xhtml', recent=recent)
 
     def feed(self):
         db, cur = get_cursor()
@@ -429,6 +436,7 @@ def connect(route, action, methods=('GET'), **kwargs):
     dispatcher.mapper.connect(route, controller='root', action=action, conditions=c, **kwargs)
 
 connect('/', 'index')
+connect('/posts', 'posts')
 connect('/signup', 'signup', methods=('GET', 'POST'))
 connect('/login', 'login', methods=('GET', 'POST'))
 connect('/logout', 'logout', methods=('POST',))

@@ -62,6 +62,11 @@ h2 {
   font-size: 120%;
 }
 
+h2.standalone {
+  margin-bottom: 0.7em;
+  border-bottom: 1px solid #CCC;
+}
+
 h3 {
   margin: 0;
   font-size: 100%;

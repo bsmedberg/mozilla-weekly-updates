@@ -1,0 +1,17 @@
+<!-- -*- Mode: XML -*- -->
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:py="http://genshi.edgewall.org/"
+      xmlns:xi="http://www.w3.org/2001/XInclude">
+  <xi:include href="common.xhtml"/>
+
+  <head>
+    <title>Mozilla Status Board: Recent Posts (All Users)</title>
+    <link href="${genlink('feed')}" type="application/atom+xml"
+          rel="alternate" title="Posts Feed (All Users)"/>
+  </head>
+  <body class="nocol">
+    <h1>Recent Posts (All Users)</h1>
+
+    ${postlist(recent)}
+  </body>
+</html>

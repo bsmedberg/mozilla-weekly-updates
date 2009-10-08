@@ -52,6 +52,8 @@
         </h2>
 
         ${postlist(teamposts)}
+
+        <h2 class="standalone"><a href="${genlink('posts')}">Recent Posts (All Users)</a></h2>
       </py:if>
       <py:if test="loginname is None">
         <h2>Recent Posts (All Users)
