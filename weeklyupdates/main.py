@@ -39,21 +39,25 @@ class CursorWrapper(object):
     def rowcount(self):
         return self.parent.rowcount
 
+def get_db(app):
+    db = MySQLdb.connect(**app.config['weeklyupdates']['database.connect.args'])
+    cur = db.cursor()
+    cur.execute('SET SESSION TRANSACTION ISOLATION LEVEL READ COMMITTED')
+    cur.close()
+    return db
+
 def get_cursor(app=None):
     if app is None:
         app = cherrypy.request.app
     if cherrypy.thread_data.weeklydb is None:
-        db = MySQLdb.connect(**app.config['weeklyupdates']['database.connect.args'])
-        cherrypy.thread_data.weeklydb = db
-
+        cherrypy.thread_data.weeklydb = get_db(app)
     else:
-        db = cherrypy.thread_data.weeklydb
         try:
-            db.ping()
+            cherrypy.thread_data.weeklydb.ping()
         except MySQLdb.OperationalError:
-            db = MySQLdb.connect(**app.config['weeklyupdates']['database.connect.args'])
-            cherrypy.thread_data.weeklydb = db
+            cherrypy.thread_data.weeklydb = get_db(app)
 
+    db = cherrypy.thread_data.weeklydb
     cur = CursorWrapper(db.cursor())
     return db, cur
 
