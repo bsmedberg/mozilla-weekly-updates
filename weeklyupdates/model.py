@@ -30,6 +30,15 @@ def get_user_posts(cur, username):
 
     return posts, thispost
 
+def get_user_feedposts(cur, username):
+    cur.execute('''SELECT username, postdate, posttime, completed, planned, tags
+                   FROM posts
+                   WHERE username = ?
+                     AND postdate >= ?
+                   ORDER BY postdate DESC, posttime DESC''',
+                (username, util.today().toordinal() - 15))
+    return [Post(d) for d in cur.fetchall()]
+
 def get_all_userposts(cur, username):
     cur.execute('''SELECT username, postdate, posttime, completed, planned, tags
                    FROM posts

@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
-
+<?python
+import datetime
+?>
 <feed xmlns="http://www.w3.org/2005/Atom"
       xmlns:py="http://genshi.edgewall.org/"
       xmlns:xi="http://www.w3.org/2001/XInclude">
@@ -10,7 +12,8 @@
   <link href="${feedurl}" rel="alternate" type="text/html"/>
 
   <id>tag:${feedtag}:main</id>
-  <updated>${feeddate(max([post.posttime for post in feedposts]))}</updated>
+  <updated py:if="len(feedposts)">${feeddate(max([post.posttime for post in feedposts]))}</updated>
+  <updated py:if="not len(feedposts)">${feeddate(datetime.datetime.utcnow())}</updated>
 
   <author>
     <name>Mozilla Status Board</name>

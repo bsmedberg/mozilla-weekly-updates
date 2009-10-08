@@ -215,7 +215,7 @@ class Root(object):
     def userpostsfeed(self, username):
         db, cur = get_cursor()
 
-        feedposts, thispost = model.get_user_posts(cur, username)
+        feedposts = model.get_user_feedposts(cur, username)
 
         cur.close()
         return renderatom(feedposts=feedposts,
