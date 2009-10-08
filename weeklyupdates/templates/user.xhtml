@@ -8,6 +8,8 @@
     <title>Mozilla Status Board: ${username}</title>
     <link href="${genlink('user', username, 'posts/feed')}" type="application/atom+xml"
           rel="alternate" title="User posts"/>
+    <link href="${genlink('user', username, 'teamposts', 'feed')}" type="application/atom+xml"
+          rel="alternate" title="Team posts"/>
   </head>
   <body>
     <h1>${username}</h1>

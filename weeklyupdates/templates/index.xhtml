@@ -6,6 +6,10 @@
 
   <head>
     <title>Mozilla Status Board</title>
+    <link href="${genlink('feed')}" type="application/atom+xml" rel="alternate" title="Recent Posts (All Users)"/>
+    <link py:if="loginname is not None"
+          href="${genlink('user', loginname, 'teamposts', 'feed')}"
+          type="application/atom+xml" rel="alternate" title="My Team Posts"/>
   </head>
   <body class="2col">
     <div id="col1">
