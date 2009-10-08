@@ -1,4 +1,5 @@
 import cherrypy, os
+import MySQLdb
 from genshi.template import TemplateLoader
 import util
 from auth import require_login, logged_in, logged_out
@@ -42,24 +43,18 @@ def get_cursor(app=None):
     if app is None:
         app = cherrypy.request.app
     if cherrypy.thread_data.weeklydb is None:
-        type = app.config['weeklyupdates']['database.type']
-        if type == 'sqlite3':
-            import sqlite3
-            db = sqlite3.connect(app.config['weeklyupdates']['database.file'])
-            cherrypy.thread_data.weeklydb_wrap = False
-        elif type == 'MySQLdb':
-            import MySQLdb
-            db = MySQLdb.connect(**app.config['weeklyupdates']['database.connect.args'])
-            cherrypy.thread_data.weeklydb_wrap = True
-        else:
-            raise Exception("Unrecognized database.type")
-
+        db = MySQLdb.connect(**app.config['weeklyupdates']['database.connect.args'])
         cherrypy.thread_data.weeklydb = db
 
-    db = cherrypy.thread_data.weeklydb
-    cur = db.cursor()
-    if cherrypy.thread_data.weeklydb_wrap:
-        cur = CursorWrapper(cur)
+    else:
+        db = cherrypy.thread_data.weeklydb
+        try:
+            db.ping()
+        except MySQLdb.OperationalError:
+            db = MySQLdb.connect(**app.config['weeklyupdates']['database.connect.args'])
+            cherrypy.thread_data.weeklydb = db
+
+    cur = CursorWrapper(db.cursor())
     return db, cur
 
 loader = TemplateLoader(os.path.join(thisdir, 'templates'), auto_reload=True)
