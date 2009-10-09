@@ -69,6 +69,9 @@ def requires_db(f):
             cherrypy.request.weeklycur.close()
             db.commit()
             return result
+        except cherrypy.HTTPRedirect:
+            db.commit()
+            raise
         except:
             db.rollback()
             raise
