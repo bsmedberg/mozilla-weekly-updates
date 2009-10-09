@@ -54,7 +54,7 @@ def getdigest(to, subject, posts):
     return message
 
 def getnags(cur):
-    for username, email, lastpostdate in model.get_naglist(cur):
+    for username, usermail, lastpostdate in model.get_naglist(cur):
         nag = """This is a friendly reminder from the Mozilla Status Board. """
         if lastpostdate is None:
             nag += "You have never made a post! "
@@ -63,8 +63,8 @@ def getnags(cur):
 
         nag += "Please try to post weekly to keep other informed of your work."
 
-        message = email.mime.text.MIMEText(text, 'plain', 'UTF-8')
-        message['To'] = email
+        message = email.mime.text.MIMEText(nag, 'plain', 'UTF-8')
+        message['To'] = usermail
         message['From'] = _genericfrom
         message['Subject'] = "Please post a status report"
         yield message
@@ -89,7 +89,8 @@ def getweekly(cur):
             yield getdigest(email, subject, posts)
 
 def sendtodaysmail(app):
-    db, cur = main.get_cursor(app)
+    db = app.connectionpool().connectfn()
+    cur = db.cursor()
 
     messages = [m for m in getnags(cur)]
     messages += [m for m in getdaily(cur)]
@@ -105,5 +106,4 @@ if __name__ == '__main__':
     for c in sys.argv[1:]:
         app.merge(c)
 
-    main.init_threadlocal_db(0)
     sendtodaysmail(app)

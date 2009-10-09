@@ -8,59 +8,6 @@ import model, mail
 
 thisdir = os.path.abspath(os.path.dirname(__file__))
 
-def init_threadlocal_db(thread_index):
-    cherrypy.thread_data.weeklydb = None
-
-cherrypy.engine.subscribe('start_thread', init_threadlocal_db)
-
-class CursorWrapper(object):
-    def __init__(self, parent):
-        self.parent = parent
-
-    def execute(self, q, *args):
-        q = q.replace('?', '%s')
-        self.parent.execute(q, *args)
-
-    def executemany(self, q, *args):
-        q = q.replace('?', '%s')
-        self.parent.executemany(q, *args)
-
-    def fetchone(self):
-        return self.parent.fetchone()
-
-    def fetchall(self):
-        return self.parent.fetchall()
-
-    def close(self):
-        self.parent.close()
-        self.parent = None
-
-    @property
-    def rowcount(self):
-        return self.parent.rowcount
-
-def get_db(app):
-    db = MySQLdb.connect(**app.config['weeklyupdates']['database.connect.args'])
-    cur = db.cursor()
-    cur.execute('SET SESSION TRANSACTION ISOLATION LEVEL READ COMMITTED')
-    cur.close()
-    return db
-
-def get_cursor(app=None):
-    if app is None:
-        app = cherrypy.request.app
-    if cherrypy.thread_data.weeklydb is None:
-        cherrypy.thread_data.weeklydb = get_db(app)
-    else:
-        try:
-            cherrypy.thread_data.weeklydb.ping()
-        except MySQLdb.OperationalError:
-            cherrypy.thread_data.weeklydb = get_db(app)
-
-    db = cherrypy.thread_data.weeklydb
-    cur = CursorWrapper(db.cursor())
-    return db, cur
-
 loader = TemplateLoader(os.path.join(thisdir, 'templates'), auto_reload=True)
 def render(name, **kwargs):
     t = loader.load(name)
@@ -75,47 +22,44 @@ def renderatom(**kwargs):
                       **kwargs).render('xml')
 
 class Root(object):
+    @model.requires_db
     def index(self):
         username = cherrypy.request.loginname
 
-        db, cur = get_cursor()
-        projects = model.get_projects(cur)
-        users = model.get_users(cur)
+        projects = model.get_projects()
+        users = model.get_users()
 
         if username is None:
             teamposts = None
             userposts = None
             todaypost = None
-            recent = model.get_recentposts(cur)
+            recent = model.get_recentposts()
         else:
-            teamposts = model.get_teamposts(cur, username)
-            userposts, todaypost = model.get_user_posts(cur, username)
+            teamposts = model.get_teamposts(username)
+            userposts, todaypost = model.get_user_posts(username)
             recent = None
 
-        cur.close()
         return render('index.xhtml', projects=projects, users=users, recent=recent,
                       teamposts=teamposts, userposts=userposts, todaypost=todaypost)
 
+    @model.requires_db
     def posts(self):
-        db, cur = get_cursor()
-        recent = model.get_recentposts(cur)
-        cur.close()
+        recent = model.get_recentposts()
         return render('posts.xhtml', recent=recent)
 
+    @model.requires_db
     def feed(self):
-        db, cur = get_cursor()
+        feedposts = model.get_feedposts()
 
-        feedposts = model.get_feedposts(cur)
-
-        cur.close()
         return renderatom(feedposts=feedposts,
                           feedurl=cherrypy.url('/feed'),
                           title="Mozilla Status Board Updates: All Users")
 
+    @model.requires_db
     def signup(self, **kwargs):
-        db, cur = get_cursor()
-
         if cherrypy.request.method.upper() == 'POST':
+            cur = model.get_cursor()
+
             username = kwargs.pop('username')
             if username == '':
                 raise cherrypy.HTTPError(409, "Cannot have an empty username")
@@ -165,18 +109,18 @@ class Root(object):
                                SELECT projectname, ? FROM projects
                                WHERE projectname = ?''',
                             [(username, project) for project in projects])
-            db.commit()
 
             raise cherrypy.HTTPRedirect(cherrypy.url('/login'))
 
-        projects = model.get_projects(cur)
+        projects = model.get_projects()
 
-        cur.close()
         return render('signup.xhtml', projects=projects)
 
+    @model.requires_db
     def login(self, **kwargs):
-        db, cur = get_cursor()
         if cherrypy.request.method.upper() == 'POST':
+            cur = model.get_cursor()
+
             username = kwargs.pop('username')
             password = kwargs.pop('password1')
             cur.execute('''SELECT username FROM users
@@ -190,74 +134,68 @@ class Root(object):
         if cherrypy.request.loginname is not None:
             raise cherrypy.HTTPRedirect(cherrypy.url('/'))
 
-        cur.close()
         return render('login.xhtml')
 
     def logout(self, **kwargs):
         logged_out()
         raise cherrypy.HTTPRedirect(cherrypy.url('/'))
 
+    @model.requires_db
     def user(self, username):
-        db, cur = get_cursor()
+        cur = model.get_cursor()
+
         cur.execute('''SELECT username FROM users WHERE username = ?''',
                     (username,))
         if cur.fetchone() is None:
             raise cherrypy.HTTPError(404, "User not found")
 
-        userposts, thispost = model.get_user_posts(cur, username)
+        userposts, thispost = model.get_user_posts(username)
 
-        projects = model.get_userprojects(cur, username)
-        teamposts = model.get_teamposts(cur, username)
+        projects = model.get_userprojects(username)
+        teamposts = model.get_teamposts(username)
 
-        cur.close()
         return render('user.xhtml', username=username, projects=projects,
                       teamposts=teamposts, userposts=userposts)
 
+    @model.requires_db
     def userposts(self, username):
-        db, cur = get_cursor()
-
-        posts = model.get_all_userposts(cur, username)
+        posts = model.get_all_userposts(username)
         if not len(posts):
             raise cherry.HTTPError(404, "No posts found")
 
-        cur.close()
         return render('userposts.xhtml', username=username, posts=posts)
 
+    @model.requires_db
     def userpostsfeed(self, username):
-        db, cur = get_cursor()
+        feedposts = model.get_user_feedposts(username)
 
-        feedposts = model.get_user_feedposts(cur, username)
-
-        cur.close()
         return renderatom(feedposts=feedposts,
                           feedurl=cherrypy.url('/feed/%s' % username),
                           title="Mozilla Status Board Updates: user %s" % username)
 
+    @model.requires_db
     def userteamposts(self, username):
-        db, cur = get_cursor()
+        teamposts = model.get_teamposts(username)
+        team = model.get_userteam(username)
 
-        teamposts = model.get_teamposts(cur, username)
-        team = model.get_userteam(cur, username)
-
-        cur.close()
         return render('teamposts.xhtml', username=username,
                       teamposts=teamposts, team=team)
 
+    @model.requires_db
     def userteampostsfeed(self, username):
-        db, cur = get_cursor()
+        teamposts = model.get_teamposts(username)
 
-        teamposts = model.get_teamposts(cur, username)
-
-        cur.close()
         return renderatom(feedposts=teamposts,
                           feedurl=cherrypy.url('/user/%s/teamposts/feed' % username),
                           title="Mozilla Status Board Updates: User Team: %s" % username)
 
     @require_login
+    @model.requires_db
     def preferences(self, **kwargs):
         user = cherrypy.request.loginname
 
-        db, cur = get_cursor()
+        cur = model.get_cursor()
+
         cur.execute('''SELECT email, reminderday, sendemail
                        FROM users WHERE username = ?''',
                     (user,))
@@ -316,7 +254,6 @@ class Root(object):
 
             cur.execute('''DELETE FROM userprojects WHERE username = ?''', (user,))
             cur.executemany('''INSERT INTO userprojects (username, projectname) VALUES (?, ?)''', projectdata)
-            db.commit()
 
 
         cur.execute('''SELECT projectname,
@@ -327,19 +264,17 @@ class Root(object):
                     (user,))
         projects = cur.fetchall()
 
-
-        cur.close()
         return render('me.xhtml', email=email, reminderday=reminderday,
                       sendemail=sendemail, projects=projects)
 
     @require_login
+    @model.requires_db
     def post(self, completed, planned, tags, isedit=False):
         user = cherrypy.request.loginname
 
-        db, cur = get_cursor()
-
         assert cherrypy.request.method.upper() == 'POST'
 
+        cur = model.get_cursor()
         cur.execute('''SELECT email
                        FROM users
                        WHERE username = ?''',
@@ -365,16 +300,13 @@ class Root(object):
                                ) AS maxq
                              )''',
                         (completed, planned, tags, now, user, user))
-            print "Rows updated: %s" % cur.rowcount
         else:
             cur.execute('''INSERT INTO posts
                            (username, postdate, posttime, completed, planned, tags)
                            VALUES (?, ?, ?, ?, ?, ?)''',
                         (user, today, now, completed, planned, tags))
 
-        db.commit()
-
-        allteam, sendnow = model.get_userteam_emails(cur, user)
+        allteam, sendnow = model.get_userteam_emails(user)
         if len(sendnow):
             mail.sendpost(email, allteam, sendnow,
                           Post((user, today, now, completed, planned, tags)))
@@ -382,47 +314,42 @@ class Root(object):
         raise cherrypy.HTTPRedirect(cherrypy.url('/'))
 
     @require_login
+    @model.requires_db
     def createproject(self, projectname):
         username = cherrypy.request.loginname
 
         if len(projectname) < 3:
             raise cherrypy.HTTPError(409, "Project name is not long enough")
 
-        db, cur = get_cursor()
-
+        cur = model.get_cursor()
         cur.execute('''INSERT INTO projects (projectname, createdby)
                        VALUES (?, ?)''',
                     (projectname, username))
         cur.execute('''INSERT INTO userprojects (username, projectname)
                        VALUES (?, ?)''',
                     (username, projectname))
-        db.commit()
 
-        cur.close()
         raise cherrypy.HTTPRedirect(cherrypy.url('/project/%s' % projectname))
 
+    @model.requires_db
     def project(self, projectname):
-        db, cur = get_cursor()
-
+        cur = model.get_cursor()
         cur.execute('''SELECT projectname FROM projects WHERE projectname = ?''',
                     (projectname,))
         if cur.fetchone() is None:
             raise cherrypy.HTTPError(404, "Project not found")
 
-        users = model.get_project_users(cur, projectname)
-        posts = model.get_project_posts(cur, projectname)
-        late = model.get_project_late(cur, projectname)
+        users = model.get_project_users(projectname)
+        posts = model.get_project_posts(projectname)
+        late = model.get_project_late(projectname)
 
-        cur.close()
         return render('project.xhtml', projectname=projectname, users=users,
                       posts=posts, late=late)
 
+    @model.requires_db
     def projectfeed(self, projectname):
-        db, cur = get_cursor()
+        posts = model.get_project_posts(projectname)
 
-        posts = model.get_project_posts(cur, projectname)
-
-        cur.close()
         return renderatom(feedposts=posts,
                           feedurl=cherrypy.url('/project/%s' % projectname),
                           title="Mozilla Status Board Updates: Project %s" % projectname)
@@ -456,6 +383,8 @@ def render_error(**kwargs):
     return render('error.xhtml', **kwargs)
 
 class Application(cherrypy.Application):
+    _pool = None
+
     def __init__(self, script_name='', config=None):
         cherrypy.Application.__init__(self, None, script_name, config)
         self.merge({
@@ -475,3 +404,8 @@ class Application(cherrypy.Application):
                 'request.dispatch': dispatcher,
                 }
             })
+
+    def connectionpool(self):
+        if self._pool is None:
+            self._pool = model.ConnectionPool(self.config)
+        return self._pool
