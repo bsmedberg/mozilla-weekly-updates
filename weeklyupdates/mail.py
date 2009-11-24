@@ -5,8 +5,9 @@ _genericfrom = 'Mozilla Status Updates <noreply@smedbergs.us>'
 
 def rendermail(template, subject, **kwargs):
     t = main.loader.load(template)
-    body = t.generate(loginname=None, subject=subject, **kwargs)
-    return body.render('html'), body.render('text')
+    htmlBody = t.generate(loginname=None, subject=subject, **kwargs)
+    textBody = t.generate(loginname=None, subject=subject, **kwargs)
+    return htmlBody.render('html'), textBody.render('text')
 
 def sendmails(messages, fromaddress=None, recipientlist=None, app=None):
     if app is None:
@@ -34,6 +35,8 @@ def sendpost(fromaddress, tolist, recipientlist, post):
     message['To'] = ', '.join(tolist)
     message['From'] = fromaddress
     message['Subject'] = subject
+    message['List-Id'] = app.config['weeklyupdates'].get('listid',
+                           '<weekly-updates.mozilla.com>')
 
     html, text = rendermail('message.xhtml', subject, post=post)
     message.attach(email.mime.text.MIMEText(text, 'plain', 'UTF-8'))
@@ -46,6 +49,8 @@ def getdigest(to, subject, posts):
     message['To'] = to
     message['From'] = _genericfrom
     message['Subject'] = subject
+    message['List-Id'] = app.config['weeklyupdates'].get('listid',
+                           '<weekly-updates.mozilla.com>')
 
     html, text = rendermail('messagedigest.xhtml', subject, posts=posts)
     message.attach(email.mime.text.MIMEText(text, 'plain', 'UTF-8'))
@@ -67,6 +72,8 @@ def getnags(cur):
         message['To'] = usermail
         message['From'] = _genericfrom
         message['Subject'] = "Please post a status report"
+        message['List-Id'] = app.config['weeklyupdates'].get('listid',
+                               '<weekly-updates.mozilla.com>')
         yield message
 
 def getdaily(cur):
