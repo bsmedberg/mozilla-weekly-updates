@@ -25,7 +25,14 @@ def sendmails(messages, fromaddress=None, recipientlist=None, app=None):
             fromaddress = message['From']
         if recipientlist is None:
             recipientlist = [message['To']]
-        session.sendmail(fromaddress, recipientlist, message.as_string())
+        try:
+            session.sendmail(fromaddress, recipientlist, message.as_string())
+        except AttributeError, e:
+            print e
+            try:
+                print "Exception sending mail from %r to %r" % (fromaddress, recipientlist)
+            except:
+                pass
     session.quit()
 
 def sendpost(fromaddress, tolist, recipientlist, post):
@@ -35,8 +42,7 @@ def sendpost(fromaddress, tolist, recipientlist, post):
     message['To'] = ', '.join(tolist)
     message['From'] = fromaddress
     message['Subject'] = subject
-    message['List-Id'] = app.config['weeklyupdates'].get('listid',
-                           '<weekly-updates.mozilla.com>')
+    message['List-Id'] = '<weekly-updates.mozilla.com>'
 
     html, text = rendermail('message.xhtml', subject, post=post)
     message.attach(email.mime.text.MIMEText(text, 'plain', 'UTF-8'))
@@ -49,8 +55,7 @@ def getdigest(to, subject, posts):
     message['To'] = to
     message['From'] = _genericfrom
     message['Subject'] = subject
-    message['List-Id'] = app.config['weeklyupdates'].get('listid',
-                           '<weekly-updates.mozilla.com>')
+    message['List-Id'] = '<weekly-updates.mozilla.com>'
 
     html, text = rendermail('messagedigest.xhtml', subject, posts=posts)
     message.attach(email.mime.text.MIMEText(text, 'plain', 'UTF-8'))
@@ -68,12 +73,13 @@ def getnags(cur):
 
         nag += "Please try to post weekly to keep other informed of your work."
 
+        print "Sending nag to %s <%s>" % (username, usermail)
+
         message = email.mime.text.MIMEText(nag, 'plain', 'UTF-8')
         message['To'] = usermail
         message['From'] = _genericfrom
         message['Subject'] = "Please post a status report"
-        message['List-Id'] = app.config['weeklyupdates'].get('listid',
-                               '<weekly-updates.mozilla.com>')
+        message['List-Id'] = '<weekly-updates.mozilla.com>'
         yield message
 
 def getdaily(cur):
@@ -81,6 +87,7 @@ def getdaily(cur):
 
     for username, email, posts in model.iter_daily(cur, yesterday):
         if len(posts):
+            print "Sending daily update to %s <%s>" % (username, email)
             yield getdigest(email,
                             "Status Updates for %s" % yesterday.isoformat(),
                             posts)
@@ -91,6 +98,8 @@ def getweekly(cur):
 
     for username, email, posts in model.iter_weekly(cur, lastweek, yesterday):
         if len(posts):
+            print "Sending weekly update to %s <%s>" % (username, email)
+
             subject = "Status Updates for %s through %s" % \
                 (lastweek.isoformat(), yesterday.isoformat()),
             yield getdigest(email, subject, posts)

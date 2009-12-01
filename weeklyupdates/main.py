@@ -161,7 +161,7 @@ class Root(object):
     def userposts(self, username):
         posts = model.get_all_userposts(username)
         if not len(posts):
-            raise cherry.HTTPError(404, "No posts found")
+            raise cherrypy.HTTPError(404, "No posts found")
 
         return render('userposts.xhtml', username=username, posts=posts)
 
