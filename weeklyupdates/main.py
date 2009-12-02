@@ -388,16 +388,15 @@ class Application(cherrypy.Application):
     def __init__(self, script_name='', config=None):
         cherrypy.Application.__init__(self, None, script_name, config)
         self.merge({
-            'global': {
-                'tools.encode.on': True,
-                'tools.encode.encoding': 'utf-8',
-                },
             '/static': {
                 'tools.staticdir.on': True,
                 'tools.staticdir.dir': 'static',
                 'tools.staticdir.root': thisdir,
                 },
             '/': {
+                'tools.encode.on': True,
+                'tools.encode.encoding': 'utf-8',
+                'tools.encode.add_charset': True,
                 'tools.weeklyauth.on': True,
                 'tools.sessions.on': True,
                 'error_page.default': render_error,
