@@ -39,6 +39,8 @@ def sendmails(messages, fromaddress=None, recipientlist=None, app=None):
                 print "Exception sending mail from %r to %r" % (fromaddress, recipientlist)
             except:
                 pass
+        except smtplib.SMTPException:
+            pass
     session.quit()
 
 def sendpost(fromaddress, tolist, recipientlist, post):
