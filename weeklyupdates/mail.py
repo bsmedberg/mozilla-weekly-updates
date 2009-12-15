@@ -21,12 +21,18 @@ def sendmails(messages, fromaddress=None, recipientlist=None, app=None):
         session.login(smtpuser, smtppass)
 
     for message in messages:
-        if fromaddress is None:
-            fromaddress = message['From']
-        if recipientlist is None:
-            recipientlist = [message['To']]
+        if fromaddress is not None:
+            messagefrom = fromaddress
+        else:
+            messagefrom = message['From']
+
+        if recipientlist is not None:
+            messageto = recipientlist
+        else:
+            messageto = [message['To']]
+
         try:
-            session.sendmail(fromaddress, recipientlist, message.as_string())
+            session.sendmail(messagefrom, messageto, message.as_string())
         except AttributeError, e:
             print e
             try:
