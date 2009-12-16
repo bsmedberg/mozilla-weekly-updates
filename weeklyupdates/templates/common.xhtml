@@ -71,7 +71,7 @@ import cherrypy
           </div>
 
           <div class="tags newlines" py:if="post.tags is not None">
-            <h4 class="posthead">Tags:</h4> ${post.gettags()}
+            <h4 class="posthead">Coordination:</h4> ${post.gettags()}
           </div>
         </div>
       </py:otherwise>
@@ -101,7 +101,7 @@ import cherrypy
       <h3>Next</h3>
       <p><textarea id="planned" name="planned" class="fullwidth" rows="6">${post.planned}</textarea></p>
 
-      <h3>Tags</h3>
+      <h3>Coordination</h3>
       <p><textarea id="tags" name="tags" class="fullwidth" rows="3">${post.tags}</textarea></p>
 
       <input py:if="post.postdate is not None"

@@ -38,7 +38,7 @@ import datetime
           </div>
 
           <div class="tags" py:if="post.tags is not None">
-            <h4 class="posthead">Tags:</h4> ${post.gettags()}
+            <h4 class="posthead">Coordination:</h4> ${post.gettags()}
           </div>
       </div>
     </content>
