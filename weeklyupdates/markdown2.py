@@ -35,6 +35,18 @@ number of extras (e.g., code syntax coloring, footnotes) as described on
 
 cmdln_desc = """A fast and complete Python implementation of Markdown, a
 text-to-HTML conversion tool for web writers.
+
+Supported extras (see -x|--extras option below):
+* code-friendly: Disable _ and __ for em and strong.
+* code-color: Pygments-based syntax coloring of <code> sections.
+* cuddled-lists: Allow lists to be cuddled to the preceding paragraph.                           
+* footnotes: Support footnotes as in use on daringfireball.net and
+  implemented in other Markdown processors (tho not in Markdown.pl v1.0.1).
+* pyshell: Treats unindented Python interactive shell sessions as <code>
+  blocks.
+* link-patterns: Auto-link given regex patterns in text (e.g. bug number
+  references, revision number references).
+* xml: Passes one-liner processing instructions and namespaced XML tags.
 """
 
 # Dev Notes:
@@ -44,8 +56,8 @@ text-to-HTML conversion tool for web writers.
 #   not yet sure if there implications with this. Compare 'pydoc sre'
 #   and 'perldoc perlre'.
 
-__version_info__ = (1, 0, 1, 15) # first three nums match Markdown.pl
-__version__ = '1.0.1.15'
+__version_info__ = (1, 0, 1, 16) # first three nums match Markdown.pl
+__version__ = '1.0.1.16'
 __author__ = "Trent Mick"
 
 import os
@@ -1129,12 +1141,12 @@ class Markdown(object):
         return text
     
     _list_item_re = re.compile(r'''
-        (\n)?               # leading line = \1
-        (^[ \t]*)           # leading whitespace = \2
-        (%s) [ \t]+         # list marker = \3
-        ((?:.+?)            # list item text = \4
-         (\n{1,2}))         # eols = \5
-        (?= \n* (\Z | \2 (%s) [ \t]+))
+        (\n)?                   # leading line = \1
+        (^[ \t]*)               # leading whitespace = \2
+        (?P<marker>%s) [ \t]+   # list marker = \3
+        ((?:.+?)                # list item text = \4
+         (\n{1,2}))             # eols = \5
+        (?= \n* (\Z | \2 (?P<next_marker>%s) [ \t]+))
         ''' % (_marker_any, _marker_any),
         re.M | re.X | re.S)
 
@@ -1380,15 +1392,35 @@ class Markdown(object):
         text = text.strip('\n')
 
         # Wrap <p> tags.
-        grafs = re.split(r"\n{2,}", text)
-        for i, graf in enumerate(grafs):
+        grafs = []
+        for i, graf in enumerate(re.split(r"\n{2,}", text)):
             if graf in self.html_blocks:
                 # Unhashify HTML blocks
-                grafs[i] = self.html_blocks[graf]
+                grafs.append(self.html_blocks[graf])
             else:
+                cuddled_list = None
+                if "cuddled-lists" in self.extras:
+                    # Need to put back trailing '\n' for `_list_item_re`
+                    # match at the end of the paragraph.
+                    li = self._list_item_re.search(graf + '\n')
+                    # Two of the same list marker in this paragraph: a likely
+                    # candidate for a list cuddled to preceding paragraph
+                    # text (issue 33). Note the `[-1]` is a quick way to
+                    # consider numeric bullets (e.g. "1." and "2.") to be
+                    # equal.
+                    if (li and li.group("next_marker")
+                        and li.group("marker")[-1] == li.group("next_marker")[-1]):
+                        start = li.start()
+                        cuddled_list = self._do_lists(graf[start:]).rstrip("\n")
+                        assert cuddled_list.startswith("<ul>") or cuddled_list.startswith("<ol>")
+                        graf = graf[:start]
+                    
                 # Wrap <p> tags.
                 graf = self._run_span_gamut(graf)
-                grafs[i] = "<p>" + graf.lstrip(" \t") + "</p>"
+                grafs.append("<p>" + graf.lstrip(" \t") + "</p>")
+                
+                if cuddled_list:
+                    grafs.append(cuddled_list)
 
         return "\n\n".join(grafs)
 
@@ -1789,13 +1821,7 @@ def main(argv=None):
                            "[HTML_REMOVED] note")
     parser.add_option("-x", "--extras", action="append",
                       help="Turn on specific extra features (not part of "
-                           "the core Markdown spec). Supported values: "
-                           "'code-friendly' disables _/__ for emphasis; "
-                           "'code-color' adds code-block syntax coloring; "
-                           "'link-patterns' adds auto-linking based on patterns; "
-                           "'footnotes' adds the footnotes syntax;"
-                           "'xml' passes one-liner processing instructions and namespaced XML tags;"
-                           "'pyshell' to put unindented Python interactive shell sessions in a <code> block.")
+                           "the core Markdown spec). See above.")
     parser.add_option("--use-file-vars",
                       help="Look for and use Emacs-style 'markdown-extras' "
                            "file var to turn on extras. See "

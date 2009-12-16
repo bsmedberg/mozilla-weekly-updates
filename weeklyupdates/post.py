@@ -9,7 +9,9 @@ link_patterns = (
     (re.compile(r'bug[\s:#]+(\d{3,7})\b'), r'https://bugzilla.mozilla.org/show_bug?id=\1'),
 )
 
-md = markdown2.Markdown(html4tags=True, tab_width=2, extras=['link-patterns'],
+md = markdown2.Markdown(html4tags=True, tab_width=2,
+                        extras=['link-patterns',
+                                'cuddled-lists'],
                         link_patterns=link_patterns)
 
 class Post(object):
