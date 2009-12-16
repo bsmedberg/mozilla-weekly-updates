@@ -1,6 +1,16 @@
 import datetime
 from genshi.filters import HTMLSanitizer
 from genshi.input import HTML
+import markdown2
+import re
+
+link_patterns = (
+    (re.compile(r'(https?://.*\b)'), r'\1'),
+    (re.compile(r'bug[\s:#]+(\d{3,7})\b'), r'https://bugzilla.mozilla.org/show_bug?id=\1'),
+)
+
+md = markdown2.Markdown(html4tags=True, tab_width=2, extras=['link-patterns'],
+                        link_patterns=link_patterns)
 
 class Post(object):
     username = None
@@ -19,15 +29,15 @@ class Post(object):
     def getcompleted(self):
         if self.completed is None:
             return None
-        return HTML(self.completed) | HTMLSanitizer()
+        return HTML(md.convert(self.completed)) | HTMLSanitizer()
 
     def getplanned(self):
         if self.planned is None:
             return None
-        return HTML(self.planned) | HTMLSanitizer()
+        return HTML(md.convert(self.planned)) | HTMLSanitizer()
 
     def gettags(self):
         if self.tags is None:
             return None
-        return HTML(self.tags) | HTMLSanitizer()
+        return HTML(md.convert(self.tags)) | HTMLSanitizer()
 
