@@ -6,7 +6,7 @@ import re
 
 link_patterns = (
     (re.compile(r'(https?://.*\b)'), r'\1'),
-    (re.compile(r'bug[\s:#]+(\d{3,7})\b'), r'https://bugzilla.mozilla.org/show_bug?id=\1'),
+    (re.compile(r'bug[\s:#]+(\d{3,7})\b'), r'https://bugzilla.mozilla.org/show_bug.cgi?id=\1'),
 )
 
 md = markdown2.Markdown(html4tags=True, tab_width=2,
