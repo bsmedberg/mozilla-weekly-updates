@@ -81,6 +81,8 @@ def getnags(cur):
 
         nag += "Please try to post weekly to keep other informed of your work."
 
+        nag += "\n\nhttp://benjamin.smedbergs.us/weekly-updates.fcgi/"
+
         print "Sending nag to %s <%s>" % (username, usermail)
 
         message = email.mime.text.MIMEText(nag, 'plain', 'UTF-8')
