@@ -1,6 +1,6 @@
 import datetime
 from genshi.filters import HTMLSanitizer
-from genshi.input import HTML
+from genshi.input import HTML, ParseError
 import markdown2
 import re
 
@@ -31,15 +31,24 @@ class Post(object):
     def getcompleted(self):
         if self.completed is None:
             return None
-        return HTML(md.convert(self.completed)) | HTMLSanitizer()
+        try:
+            return HTML(md.convert(self.completed)) | HTMLSanitizer()
+        except ParseError:
+            return self.completed
 
     def getplanned(self):
         if self.planned is None:
             return None
-        return HTML(md.convert(self.planned)) | HTMLSanitizer()
+        try:
+            return HTML(md.convert(self.planned)) | HTMLSanitizer()
+        except ParseError:
+            return self.planned
 
     def gettags(self):
         if self.tags is None:
             return None
-        return HTML(md.convert(self.tags)) | HTMLSanitizer()
+        try:
+            return HTML(md.convert(self.tags)) | HTMLSanitizer()
+        except ParseError:
+            return self.tags
 
