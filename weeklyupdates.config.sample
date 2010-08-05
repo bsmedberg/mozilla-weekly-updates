@@ -1,0 +1,17 @@
+[weeklyupdates]
+database.type = 'MySQLdb'
+database.connect.args = {'host': 'mydbserver',
+	                 'user': 'mydbname',
+	                 'passwd': 'mydbpassword',
+                         'db': 'weeklyupdates',
+	                 'use_unicode': True}
+globalpass = 'somepasswordthatpeoplecanshare'
+feed.tag.domain = 'weeklyupdates.benjamin.smedbergs.us,2009-10-05'
+smtp.server = 'mymailserver'
+smtp.username = 'mymailuser'
+smtp.password = 'mymailpassword'
+
+[/]
+tools.sessions.timeout = 20160
+tools.sessions.storage_type = 'file'
+tools.sessions.storage_path = '/home/osuser/apps/weeklyupdates-sessions'
