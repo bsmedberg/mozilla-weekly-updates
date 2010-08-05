@@ -42,6 +42,9 @@ Supported extras (see -x|--extras option below):
 * cuddled-lists: Allow lists to be cuddled to the preceding paragraph.                           
 * footnotes: Support footnotes as in use on daringfireball.net and
   implemented in other Markdown processors (tho not in Markdown.pl v1.0.1).
+* html-classes: Takes a dict mapping html tag names (lowercase) to a
+  string to use for a "class" tag attribute. Currently only supports
+  "pre" and "code" tags. Add an issue if you require this for other tags.
 * pyshell: Treats unindented Python interactive shell sessions as <code>
   blocks.
 * link-patterns: Auto-link given regex patterns in text (e.g. bug number
@@ -56,8 +59,8 @@ Supported extras (see -x|--extras option below):
 #   not yet sure if there implications with this. Compare 'pydoc sre'
 #   and 'perldoc perlre'.
 
-__version_info__ = (1, 0, 1, 16) # first three nums match Markdown.pl
-__version__ = '1.0.1.16'
+__version_info__ = (1, 0, 1, 17) # first three nums match Markdown.pl
+__version__ = '1.0.1.17'
 __author__ = "Trent Mick"
 
 import os
@@ -191,6 +194,8 @@ class Markdown(object):
                 extras = dict([(e, None) for e in extras])
             self.extras.update(extras)
         assert isinstance(self.extras, dict)
+        if "toc" in self.extras and not "header-ids" in self.extras:
+            self.extras["header-ids"] = None   # "toc" implies "header-ids"
         self._instance_extras = self.extras.copy()
         self.link_patterns = link_patterns
         self.use_file_vars = use_file_vars
@@ -206,6 +211,8 @@ class Markdown(object):
         if "footnotes" in self.extras:
             self.footnotes = {}
             self.footnote_ids = []
+        if "header-ids" in self.extras:
+            self._count_from_header_id = {} # no `defaultdict` in Python 2.4
 
     def convert(self, text):
         """Convert the given text."""
@@ -280,7 +287,11 @@ class Markdown(object):
             text = self._unhash_html_spans(text)
 
         text += "\n"
-        return text
+        
+        rv = UnicodeWithAttrs(text)
+        if "toc" in self.extras:
+            rv._toc = self._toc
+        return rv
 
     _emacs_oneliner_vars_pat = re.compile(r"-\*-\s*([^\r\n]*?)\s*-\*-", re.UNICODE)
     # This regular expression is intended to match blocks like this:
@@ -1024,6 +1035,28 @@ class Markdown(object):
 
         return text 
 
+    def header_id_from_text(self, text, prefix):
+        """Generate a header id attribute value from the given header
+        HTML content.
+        
+        This is only called if the "header-ids" extra is enabled.
+        Subclasses may override this for different header ids.
+        """
+        header_id = _slugify(text)
+        if prefix:
+            header_id = prefix + '-' + header_id
+        if header_id in self._count_from_header_id:
+            self._count_from_header_id[header_id] += 1
+            header_id += '-%s' % self._count_from_header_id[header_id]
+        else:
+            self._count_from_header_id[header_id] = 1
+        return header_id
+
+    _toc = None
+    def _toc_add_entry(self, level, id, name):
+        if self._toc is None:
+            self._toc = []
+        self._toc.append((level, id, name))
 
     _setext_h_re = re.compile(r'^(.+)[ \t]*\n(=+|-+)[ \t]*\n+', re.M)
     def _setext_h_sub(self, match):
@@ -1031,8 +1064,15 @@ class Markdown(object):
         demote_headers = self.extras.get("demote-headers")
         if demote_headers:
             n = min(n + demote_headers, 6)
-        return "<h%d>%s</h%d>\n\n" \
-               % (n, self._run_span_gamut(match.group(1)), n)
+        header_id_attr = ""
+        if "header-ids" in self.extras:
+            header_id = self.header_id_from_text(match.group(1),
+                prefix=self.extras["header-ids"])
+            header_id_attr = ' id="%s"' % header_id
+        html = self._run_span_gamut(match.group(1))
+        if "toc" in self.extras:
+            self._toc_add_entry(n, header_id, html)
+        return "<h%d%s>%s</h%d>\n\n" % (n, header_id_attr, html, n)
 
     _atx_h_re = re.compile(r'''
         ^(\#{1,6})  # \1 = string of #'s
@@ -1048,8 +1088,15 @@ class Markdown(object):
         demote_headers = self.extras.get("demote-headers")
         if demote_headers:
             n = min(n + demote_headers, 6)
-        return "<h%d>%s</h%d>\n\n" \
-               % (n, self._run_span_gamut(match.group(2)), n)
+        header_id_attr = ""
+        if "header-ids" in self.extras:
+            header_id = self.header_id_from_text(match.group(2),
+                prefix=self.extras["header-ids"])
+            header_id_attr = ' id="%s"' % header_id
+        html = self._run_span_gamut(match.group(2))
+        if "toc" in self.extras:
+            self._toc_add_entry(n, header_id, html)
+        return "<h%d%s>%s</h%d>\n\n" % (n, header_id_attr, html, n)
 
     def _do_headers(self, text):
         # Setext-style headers:
@@ -1247,7 +1294,25 @@ class Markdown(object):
                 return "\n\n%s\n\n" % colored
 
         codeblock = self._encode_code(codeblock)
-        return "\n\n<pre><code>%s\n</code></pre>\n\n" % codeblock
+        pre_class_str = self._html_class_str_from_tag("pre")
+        code_class_str = self._html_class_str_from_tag("code")
+        return "\n\n<pre%s><code%s>%s\n</code></pre>\n\n" % (
+            pre_class_str, code_class_str, codeblock)
+
+    def _html_class_str_from_tag(self, tag):
+        """Get the appropriate ' class="..."' string (note the leading
+        space), if any, for the given tag.
+        """
+        if "html-classes" not in self.extras:
+            return ""
+        try:
+            html_classes_from_tag = self.extras["html-classes"]
+        except TypeError:
+            return ""
+        else:
+            if tag in html_classes_from_tag:
+                return ' class="%s"' % html_classes_from_tag[tag]
+        return ""
 
     def _do_code_blocks(self, text):
         """Process Markdown `<pre><code>` blocks."""
@@ -1408,7 +1473,7 @@ class Markdown(object):
                     # text (issue 33). Note the `[-1]` is a quick way to
                     # consider numeric bullets (e.g. "1." and "2.") to be
                     # equal.
-                    if (li and li.group("next_marker")
+                    if (li and len(li.group(2)) <= 3 and li.group("next_marker")
                         and li.group("marker")[-1] == li.group("next_marker")[-1]):
                         start = li.start()
                         cuddled_list = self._do_lists(graf[start:]).rstrip("\n")
@@ -1579,6 +1644,61 @@ class MarkdownWithExtras(Markdown):
 
 
 #---- internal support functions
+
+class UnicodeWithAttrs(unicode):
+    """A subclass of unicode used for the return value of conversion to
+    possibly attach some attributes. E.g. the "toc_html" attribute when
+    the "toc" extra is used.
+    """
+    _toc = None
+    @property
+    def toc_html(self):
+        """Return the HTML for the current TOC.
+        
+        This expects the `_toc` attribute to have been set on this instance.
+        """
+        if self._toc is None:
+            return None
+        
+        def indent():
+            return '  ' * (len(h_stack) - 1)
+        lines = []
+        h_stack = [0]   # stack of header-level numbers
+        for level, id, name in self._toc:
+            if level > h_stack[-1]:
+                lines.append("%s<ul>" % indent())
+                h_stack.append(level)
+            elif level == h_stack[-1]:
+                lines[-1] += "</li>"
+            else:
+                while level < h_stack[-1]:
+                    h_stack.pop()
+                    if not lines[-1].endswith("</li>"):
+                        lines[-1] += "</li>"
+                    lines.append("%s</ul></li>" % indent())
+            lines.append(u'%s<li><a href="#%s">%s</a>' % (
+                indent(), id, name))
+        while len(h_stack) > 1:
+            h_stack.pop()
+            if not lines[-1].endswith("</li>"):
+                lines[-1] += "</li>"
+            lines.append("%s</ul>" % indent())
+        return '\n'.join(lines) + '\n'
+
+
+_slugify_strip_re = re.compile(r'[^\w\s-]')
+_slugify_hyphenate_re = re.compile(r'[-\s]+')
+def _slugify(value):
+    """
+    Normalizes string, converts to lowercase, removes non-alpha characters,
+    and converts spaces to hyphens.
+    
+    From Django's "django/template/defaultfilters.py".
+    """
+    import unicodedata
+    value = unicodedata.normalize('NFKD', value).encode('ascii', 'ignore')
+    value = unicode(_slugify_strip_re.sub('', value).strip().lower())
+    return _slugify_hyphenate_re.sub('-', value)
 
 # From http://aspn.activestate.com/ASPN/Cookbook/Python/Recipe/52549
 def _curry(*args, **kwargs):
@@ -1895,6 +2015,9 @@ def main(argv=None):
                              use_file_vars=opts.use_file_vars)
         sys.stdout.write(
             html.encode(sys.stdout.encoding or "utf-8", 'xmlcharrefreplace'))
+        if extras and "toc" in extras:
+            log.debug("toc_html: " +
+                html.toc_html.encode(sys.stdout.encoding or "utf-8", 'xmlcharrefreplace'))
         if opts.compare:
             test_dir = join(dirname(dirname(abspath(__file__))), "test")
             if exists(join(test_dir, "test_markdown2.py")):
