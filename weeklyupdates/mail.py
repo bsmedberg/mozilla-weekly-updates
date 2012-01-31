@@ -49,6 +49,7 @@ def sendpost(fromaddress, tolist, recipientlist, post):
     message = email.mime.multipart.MIMEMultipart('alternative')
     message['To'] = ', '.join(tolist)
     message['From'] = fromaddress
+    message['Sender'] = 'weekly-updates@smedbergs.us'
     message['Subject'] = subject
     message['List-Id'] = '<weekly-updates.mozilla.com>'
 
@@ -62,6 +63,7 @@ def getdigest(to, subject, posts):
     message = email.mime.multipart.MIMEMultipart('alternative')
     message['To'] = to
     message['From'] = _genericfrom
+    message['Sender'] = 'weekly-updates@smedbergs.us'
     message['Subject'] = subject
     message['List-Id'] = '<weekly-updates.mozilla.com>'
 
@@ -88,6 +90,7 @@ def getnags(cur):
         message = email.mime.text.MIMEText(nag, 'plain', 'UTF-8')
         message['To'] = usermail
         message['From'] = _genericfrom
+        message['Sender'] = 'weekly-updates@smedbergs.us'
         message['Subject'] = "Please post a status report"
         message['List-Id'] = '<weekly-updates.mozilla.com>'
         yield message
