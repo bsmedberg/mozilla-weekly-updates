@@ -172,5 +172,9 @@ img {
 
 textarea {
   border: 1px solid #CCC;
+
+  /* Make resizeable textareas in Firefox float over other content rather than
+     under, see bug 563440 */
+  position: relative;
 }
 
