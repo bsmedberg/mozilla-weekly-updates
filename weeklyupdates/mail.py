@@ -34,14 +34,13 @@ def sendmails(messages, fromaddress=None, recipientlist=None, app=None):
         try:
             session.sendmail(messagefrom, messageto, message.as_string())
         except AttributeError, e:
-            print e
-            try:
-                print "Exception sending mail from %r to %r" % (fromaddress, recipientlist)
-            except:
-                pass
-        except smtplib.SMTPException:
-            pass
-    session.quit()
+            cherrypy.log.error("Exception sending mail from %r to %r: %s" % (fromaddress, recipientlist, e))
+        except smtplib.SMTPException, e:
+            cherrypy.log.error("Exception sending mail from %r to %r: %s" % (fromaddress, recipientlist, e))
+    try:
+        session.quit()
+    except smtplib.SMTPException:
+        pass
 
 def sendpost(fromaddress, tolist, recipientlist, post):
     subject = "Status Update: %s on %s" % (post.username, post.postdate.isoformat())
