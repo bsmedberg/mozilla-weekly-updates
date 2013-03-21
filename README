@@ -1,0 +1,55 @@
+Requirements
+------------
+* Python
+* Cherry Pie
+* Genshi
+* Routes
+* MySQL
+* MySQL for Python
+
+Install and Config of Prereqs
+-----------------------------
+These instructions are currently OSX specific. 
+
+1. Python
+Python is preinstalled on OSX.
+
+2. Cherry Pie
+a. Download from http://download.cherrypy.org/cherrypy/3.2.2/
+b. Installation instructions at http://docs.cherrypy.org/stable/intro/install.html
+
+3. Genshi
+sudo easy_install Genshi
+
+4. Routes
+sudo easy_install Routes
+
+5.MySQL
+a. Download from http://dev.mysql.com/downloads/mysql/
+b. Run the dmg installer
+c. Launch MySQL 
+sudo /usr/local/mysql/bin/mysqld_safe 
+d. Create a MySQL user
+mysql --user=root mysql
+CREATE USER 'user'@'localhost' IDENTIFIED BY 'pass';
+mysql> GRANT ALL PRIVILEGES ON *.* TO 'user'@'localhost' WITH GRANT OPTION;
+e. Set up MySQL client
+sudo ln -s /usr/local/mysql/lib/libmysqlclient.18.dylib /usr/lib/libmysqlclient.18.dylib
+
+6. MySQL for Python
+a. Download from http://sourceforge.net/projects/mysql-python/
+b. Follow installation instructions in INSTALL
+
+Weekly Updates Config
+---------------------
+1. Create the database
+run mysql dbschema.sql
+2. Make a config file
+a. cp weeklyupdates.config.sample weeklyupdates.config
+b. Update host to localhost and specify user and passwd
+3. Create directory specified in config file tools.sessions.storage_path
+
+Launch Weekly Updates
+---------------------
+python start.py -a weeklyupdates.config
+
