@@ -28,7 +28,6 @@ CREATE TABLE IF NOT EXISTS posts
   username VARCHAR(80) NOT NULL,
   postdate INTEGER NOT NULL,
   posttime INTEGER NOT NULL,
-  lastupdated INTEGER NOT NULL,
   completed TEXT,
   planned TEXT,
   tags TEXT,
