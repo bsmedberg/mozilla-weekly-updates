@@ -21,22 +21,19 @@ def sendmails(messages, fromaddress=None, recipientlist=None, app=None):
         session.login(smtpuser, smtppass)
 
     for message in messages:
-        if fromaddress is not None:
-            messagefrom = fromaddress
-        else:
-            messagefrom = message['From']
-
         if recipientlist is not None:
             messageto = recipientlist
         else:
             messageto = [message['To']]
 
-        try:
-            session.sendmail(messagefrom, messageto, message.as_string())
-        except AttributeError, e:
-            cherrypy.log.error("Exception sending mail from %r to %r: %s" % (fromaddress, recipientlist, e))
-        except smtplib.SMTPException, e:
-            cherrypy.log.error("Exception sending mail from %r to %r: %s" % (fromaddress, recipientlist, e))
+        messagestr = message.as_string()
+        for recipient in messageto:
+            try:
+                session.sendmail("", recipient, messagestr)
+            except AttributeError, e:
+                cherrypy.log.error("Exception sending mail from %r to %r: %s" % (fromaddress, recipientlist, e))
+            except smtplib.SMTPException, e:
+                cherrypy.log.error("Exception sending mail from %r to %r: %s" % (fromaddress, recipientlist, e))
     try:
         session.quit()
     except smtplib.SMTPException:
