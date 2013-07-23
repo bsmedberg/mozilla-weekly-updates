@@ -19,3 +19,32 @@ function doLogout()
 {
   navigator.id.logout();
 }
+
+function extractPreview()
+{
+  var f = document.getElementById('previewFrame');
+  var pdoc = f.contentDocument;
+  var pdiv = pdoc.querySelector('.postdetail');
+  if (!pdiv) {
+    return;
+  }
+  var pinner = document.getElementById('previewInner');
+  pinner.innerHTML = '';
+  pinner.appendChild(pdiv);
+  document.getElementById('previewOuter').classList.remove('hidden');
+}
+document.getElementById('previewFrame').addEventListener('load', extractPreview, false);
+
+function doPreview()
+{
+  var form = document.getElementById('postform');
+  var oldAction = form.action;
+  form.action = kPreviewURL;
+  form.target = "previewFrame";
+  form.submit();
+}
+
+function clearPreview()
+{
+  document.getElementById('previewOuter').classList.add('hidden');
+}

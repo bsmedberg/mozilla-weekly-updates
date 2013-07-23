@@ -37,6 +37,7 @@ import json
     </form>
     <script type="text/javascript">
       var gUsername = ${json.dumps(loginid)};
+      var kPreviewURL = "${genlink('preview')}";
     </script>
     <script type="text/javascript" src="https://login.persona.org/include.js" />
     <script type="text/javascript" src="${genlink('/static/persona.js')}" />
@@ -98,7 +99,8 @@ import json
   </div>
 
   <form py:def="editpost(post)" class="editpost bordered"
-        action="${genlink('post')}" method="POST">
+        action="${genlink('post')}" method="POST" id="postform"
+	onsubmit="clearPreview()">
 
     <div class="fullwidth">
       <h3>Done</h3>
@@ -113,7 +115,13 @@ import json
       <input py:if="post.postdate is not None"
              type="hidden" name="isedit" value="1"/>
 
-      <p><input type="submit" value="Submit" /></p>
+      <iframe id="previewFrame" name="previewFrame" class="hidden fullwidth"/>
+      <div id="previewOuter" class="hidden fullwidth">
+	<h4>Preview:</h4>
+	<div id="previewInner" />
+      </div>
+      
+      <p><input type="button" value="Preview" onclick="doPreview()"/><input type="submit" value="Submit" /></p>
     </div>
   </form>
 </div>

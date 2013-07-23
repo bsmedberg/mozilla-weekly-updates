@@ -199,6 +199,14 @@ class Root(object):
         return render('me.xhtml', reminderday=reminderday,
                       sendemail=sendemail, projects=projects)
 
+    def preview(self, completed, planned, tags):
+        assert cherrypy.request.method.upper() == 'POST'
+
+        today = util.today().toordinal()
+        now = util.now()
+        post = Post(('<preview>', today, now, completed, planned, tags))        
+        return render('preview.xhtml', post=post)
+
     @require_login
     @model.requires_db
     def post(self, completed, planned, tags, isedit=False):
@@ -300,6 +308,7 @@ connect('/', 'index')
 connect('/posts', 'posts')
 connect('/signup', 'signup', methods=('GET', 'POST'))
 connect('/login', 'login', methods=('GET', 'POST'))
+connect('/preview', 'preview', methods=('POST',))
 connect('/post', 'post', methods=('POST',))
 connect('/preferences', 'preferences', methods=('GET', 'POST'))
 connect('/feed', 'feed')
