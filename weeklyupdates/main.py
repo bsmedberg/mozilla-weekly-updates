@@ -82,10 +82,10 @@ class Root(object):
                         (loginid))
             if cur.fetchone() is None:
                 cur.execute('''INSERT INTO users
-                               (username, loginid, email) VALUES (?, ?, ?)''',
+                               (username, userid, email) VALUES (?, ?, ?)''',
                             (loginid, loginid, loginid))
                 logged_in(loginid)
-                cherrypy.HTTPRedirect(cherrypy.url('/preferences'))
+                raise cherrypy.HTTPRedirect(cherrypy.url('/preferences'))
             logged_in(loginid)
             raise cherrypy.HTTPRedirect(returnTo)
 
