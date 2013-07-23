@@ -15,7 +15,7 @@ md = markdown2.Markdown(html4tags=True, tab_width=2,
                         link_patterns=link_patterns)
 
 class Post(object):
-    username = None
+    userid = None
     postdate = None
     posttime = None
     completed = None
@@ -24,7 +24,7 @@ class Post(object):
 
     def __init__(self, record):
         if record is not None:
-            self.username, self.postdate, self.posttime, self.completed, self.planned, self.tags = record
+            self.userid, self.postdate, self.posttime, self.completed, self.planned, self.tags = record
             self.postdate = datetime.date.fromordinal(self.postdate)
             self.posttime = datetime.datetime.fromtimestamp(self.posttime)
 

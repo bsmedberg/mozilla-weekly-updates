@@ -5,12 +5,12 @@
   <xi:include href="common.xhtml"/>
 
   <head>
-    <title>Mozilla Status Board: User Team: ${username}</title>
-    <link href="${genlink('user', username, 'teamposts/feed')}" type="application/atom+xml"
+    <title>Mozilla Status Board: User Team: ${userid}</title>
+    <link href="${genlink('user', userid, 'teamposts/feed')}" type="application/atom+xml"
           rel="alternate" title=" posts"/>
   </head>
   <body class="2col">
-    <h1>User Team: ${username}</h1>
+    <h1>User Team: ${userid}</h1>
 
     <div id="col1">
     ${postlist(teamposts)}

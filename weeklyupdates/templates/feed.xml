@@ -20,12 +20,12 @@ import datetime
   </author>
 
   <entry py:for="post in feedposts">
-    <title>${post.username} Status Update: ${post.postdate.isoformat()}</title>
-    <id>tag:${feedtag}:${post.username}:${post.postdate.isoformat()}</id>
+    <title>${post.userid} Status Update: ${post.postdate.isoformat()}</title>
+    <id>tag:${feedtag}:${post.userid}:${post.postdate.isoformat()}</id>
     <updated>${feeddate(post.posttime)}</updated>
     <author>
-      <name>${post.username}</name>
-      <uri>${genlink('user', post.username)}</uri>
+      <name>${post.userid}</name>
+      <uri>${genlink('user', post.userid)}</uri>
     </author>
     <content type="xhtml">
       <div xmlns="http://www.w3.org/1999/xhtml" class="postdata">

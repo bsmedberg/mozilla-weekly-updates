@@ -5,14 +5,14 @@
   <xi:include href="common.xhtml"/>
 
   <head>
-    <title>Mozilla Status Board: ${username}</title>
-    <link href="${genlink('user', username, 'posts/feed')}" type="application/atom+xml"
+    <title>Mozilla Status Board: ${userid}</title>
+    <link href="${genlink('user', userid, 'posts/feed')}" type="application/atom+xml"
           rel="alternate" title="User posts"/>
-    <link href="${genlink('user', username, 'teamposts', 'feed')}" type="application/atom+xml"
+    <link href="${genlink('user', userid, 'teamposts', 'feed')}" type="application/atom+xml"
           rel="alternate" title="Team posts"/>
   </head>
   <body>
-    <h1>${username}</h1>
+    <h1>${userid}</h1>
 
     <div class="keeptogether">
       <h2>Current Status
@@ -23,8 +23,8 @@
       ${postdetail(userposts[0], showuser=False, showdate=False)}
     </div>
 
-    <h2><a href="${genlink('user', username, 'posts')}">Older Posts</a>
-      <a href="${genlink('user', username, 'posts/feed')}" class="feedlink"/>
+    <h2><a href="${genlink('user', userid, 'posts')}">Older Posts</a>
+      <a href="${genlink('user', userid, 'posts/feed')}" class="feedlink"/>
     </h2>
 
     <div class="keeptogether">
@@ -35,8 +35,8 @@
     </div>
 
     <div class="keeptogether">
-      <h2><a href="${genlink('user', username, 'teamposts')}">Team Posts</a>
-        <a href="${genlink('user', username, 'teamposts', 'feed')}" class="feedlink"/>
+      <h2><a href="${genlink('user', userid, 'teamposts')}">Team Posts</a>
+        <a href="${genlink('user', userid, 'teamposts', 'feed')}" class="feedlink"/>
       </h2>
 
       ${postlist(teamposts)}

@@ -25,7 +25,7 @@
       <h2>Who's <span title="Who hasn't posted an update in the last week?">Late?</span></h2>
       <p py:if="not len(late)"><em>Everybody's up to date!</em></p>
       <ul py:if="len(late)" class="bordered">
-        <li py:for="username, lastpostdate in late"><a href="${genlink('user', username)}">${username}</a>:
+        <li py:for="userid, lastpostdate in late"><a href="${genlink('user', userid)}">${userid}</a>:
           <em py:if="lastpostdate is None">Never posted</em>
           <em py:if="lastpostdate">Last posted on ${lastpostdate.isoformat()}</em>
         </li>

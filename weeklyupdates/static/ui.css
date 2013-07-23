@@ -94,11 +94,12 @@ p {
   margin-bottom: 0.8em;
 }
 
-#logout {
+#logout, #login {
   display: inline;
 }
 
-#logout-button {
+#logout-button,
+#login-button {
   display: inline;
 }
 

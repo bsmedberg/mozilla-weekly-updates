@@ -3,6 +3,7 @@
 from weeklyupdates.util import feeddate
 from urllib import quote, urlencode
 import cherrypy
+import json
 ?>
 <div xmlns="http://www.w3.org/1999/xhtml"
      xmlns:py="http://genshi.edgewall.org/"
@@ -17,20 +18,28 @@ import cherrypy
   <body py:match="body" class="normalcols" py:attrs="select('@*')">
     <div id="header">
       <a href="${genlink('')}">Mozilla Status Board</a> |
-      <py:choose test="loginname">
+      <py:choose test="loginid">
         <py:when test="None">
-          <a href="${genlink('login')}">Log in</a> |
-          <a href="${genlink('signup')}">Sign Up</a>
+	  <a href="#" onclick="doLogin(); return false;">Log In</a>
         </py:when>
         <py:otherwise>
-          ${loginname}: <a href="${genlink('preferences')}">Settings</a> |
-          <form id="logout" action="${genlink('logout')}" method="POST"><input id="logout-button" type="submit" value="Log out"/></form>
+          ${loginid}: <a href="${genlink('preferences')}">Settings</a> |
+	  <a href="#" onclick="doLogout(); return false;">Log Out</a>
         </py:otherwise>
       </py:choose>
     </div>
     <div id="content">
     ${select("*|text()")}
     </div>
+    <form id="login" action="${genlink('login')}" method="POST">
+      <input type="hidden" name="loginAssertion" id="loginAssertion"/>
+      <input type="hidden" name="returnTo" value="${cherrypy.url('')}"/>
+    </form>
+    <script type="text/javascript">
+      var gUsername = ${json.dumps(loginid)};
+    </script>
+    <script type="text/javascript" src="https://login.persona.org/include.js" />
+    <script type="text/javascript" src="${genlink('/static/persona.js')}" />
   </body>
 
   <a py:match="a[@class='feedlink']" py:attrs="select('@*')" type="application/atom+xml">
@@ -51,7 +60,7 @@ import cherrypy
   <div py:def="postdetail(post, showuser=True, showdate=True,
                           cssclass='postdetail bordered')"
        class="${cssclass}">
-    <py:choose test="post.username">
+    <py:choose test="post.userid">
       <py:when test="None">
         <p>No status posted</p>
       </py:when>
@@ -59,7 +68,7 @@ import cherrypy
         <p py:if="showdate" class="postdate">
           Posted on ${post.postdate.isoformat()}
         </p>
-        <h3 py:if="showuser" class="postuser"><a href="${genlink('user', post.username)}">${post.username}</a></h3>
+        <h3 py:if="showuser" class="postuser"><a href="${genlink('user', post.userid)}">${post.userid}</a></h3>
 
         <div class="postdata">
           <div class="completed newlines" py:if="post.completed is not None">
@@ -84,12 +93,9 @@ import cherrypy
     </py:for>
   </div>
 
-  <form py:def="loginform()" class="loginform bordered"
-        action="${genlink('login')}" method="POST">
-    <label for="username">Username</label><input id="username" type="text" name="username" size="20" /><br/>
-    <label for="password1">Password</label><input id="password1" type="password" name="password1" size="20" /><br/>
-    <input type="submit" value="Login" />
-  </form>
+  <div py:def="loginform()" class="bordered">
+    <input type="button" value="Log in" onclick="doLogin()" />
+  </div>
 
   <form py:def="editpost(post)" class="editpost bordered"
         action="${genlink('post')}" method="POST">

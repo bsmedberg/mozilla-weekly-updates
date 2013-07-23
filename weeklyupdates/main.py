@@ -5,38 +5,39 @@ import util
 from auth import require_login, logged_in, logged_out
 from post import Post
 import model, mail
+import browserid
 
 thisdir = os.path.abspath(os.path.dirname(__file__))
 
 loader = TemplateLoader(os.path.join(thisdir, 'templates'), auto_reload=True)
 def render(name, **kwargs):
     t = loader.load(name)
-    return t.generate(loginname=cherrypy.request.loginname,
+    return t.generate(loginid=cherrypy.request.loginid,
                       **kwargs).render('html')
 
 def renderatom(**kwargs):
     t = loader.load('feed.xml')
     cherrypy.response.headers['Content-Type'] = 'application/atom+xml'
-    return t.generate(loginname=cherrypy.request.loginname,
+    return t.generate(loginid=cherrypy.request.loginid,
                       feedtag=cherrypy.request.app.config['weeklyupdates']['feed.tag.domain'],
                       **kwargs).render('xml')
 
 class Root(object):
     @model.requires_db
     def index(self):
-        username = cherrypy.request.loginname
+        loginid = cherrypy.request.loginid
 
         projects = model.get_projects()
         users = model.get_users()
 
-        if username is None:
+        if loginid is None:
             teamposts = None
             userposts = None
             todaypost = None
             recent = model.get_recentposts()
         else:
-            teamposts = model.get_teamposts(username)
-            userposts, todaypost = model.get_user_posts(username)
+            teamposts = model.get_teamposts(loginid)
+            userposts, todaypost = model.get_user_posts(loginid)
             recent = None
 
         return render('index.xhtml', projects=projects, users=users, recent=recent,
@@ -56,178 +57,109 @@ class Root(object):
                           title="Mozilla Status Board Updates: All Users")
 
     @model.requires_db
-    def signup(self, **kwargs):
-        if cherrypy.request.method.upper() == 'POST':
-            cur = model.get_cursor()
-
-            username = kwargs.pop('username')
-            if username == '':
-                raise cherrypy.HTTPError(409, "Cannot have an empty username")
-
-            if username.startswith('!'):
-                raise cherrypy.HTTPError(409, "Username must not start with !")
-
-            cur.execute('SELECT username FROM users WHERE username = ?',
-                        (username,))
-            if cur.fetchone() is not None:
-                raise cherrypy.HTTPError(409, "There is already a user of that name")
-
-            email = kwargs.pop('email')
-            email = (None, email)[email is not None]
-
-            reminderday = kwargs.pop('reminderday')
-            if reminderday == '-':
-                reminderday = None
-            else:
-                reminderday = int(reminderday)
-
-            sendemail = kwargs.pop('sendemail')
-            if sendemail == '-':
-                sendemail = None
-            else:
-                sendemail = int(sendemail)
-
-            password = kwargs.pop('password1')
-            password2 = kwargs.pop('password2')
-            if password != password2:
-                raise cherrypy.HTTPError(409, "The passwords didn't match")
-
-            if kwargs.pop('globalpass') != cherrypy.request.app.config['weeklyupdates']['globalpass']:
-                raise cherrypy.HTTPError(409, "The global password is incorrect")
-
-            projects = []
-            for k, v in kwargs.iteritems():
-                if k.startswith('project_') and v == '1':
-                    project = k[8:]
-                    projects.append(project)
-
-            cur.execute('''INSERT INTO users (username, email, password, reminderday, sendemail)
-                        VALUES (?, ?, ?, ?, ?)''',
-                        (username, email, password, reminderday, sendemail))
-            cur.executemany('''INSERT INTO userprojects
-                               (projectname, username)
-                               SELECT projectname, ? FROM projects
-                               WHERE projectname = ?''',
-                            [(username, project) for project in projects])
-
-            raise cherrypy.HTTPRedirect(cherrypy.url('/login'))
-
-        projects = model.get_projects()
-
-        return render('signup.xhtml', projects=projects)
-
-    @model.requires_db
     def login(self, **kwargs):
         if cherrypy.request.method.upper() == 'POST':
             cur = model.get_cursor()
 
-            username = kwargs.pop('username')
-            password = kwargs.pop('password1')
-            cur.execute('''SELECT username FROM users
-                           WHERE username = ? AND password = ?''',
-                        (username, password))
-            if cur.fetchone() is not None:
-                logged_in(username)
-            else:
-                raise cherrypy.HTTPError(409, "Invalid username/password")
+            returnTo = kwargs.get('returnTo', cherrypy.url('/'))
 
-        if cherrypy.request.loginname is not None:
+            assertion = kwargs.pop('loginAssertion')
+            if assertion == '':
+                logged_out()
+                raise cherrypy.HTTPRedirect(returnTo)
+
+            try:
+                result = browserid.verify(assertion, cherrypy.request.base)
+            except browserid.ConnectionError:
+                raise cherrypy.HTTPError(503, "Login connection error")
+            except browserid.TrustError:
+                raise cherrypy.HTTPError(409, "Invalid login")
+
+            loginid = result['email']
+
+            cur.execute('''SELECT userid FROM users
+                           WHERE userid = ?''',
+                        (loginid))
+            if cur.fetchone() is None:
+                cur.execute('''INSERT INTO users
+                               (username, loginid, email) VALUES (?, ?, ?)''',
+                            (loginid, loginid, loginid))
+                logged_in(loginid)
+                cherrypy.HTTPRedirect(cherrypy.url('/preferences'))
+            logged_in(loginid)
+            raise cherrypy.HTTPRedirect(returnTo)
+
+        if cherrypy.request.loginid is not None:
             raise cherrypy.HTTPRedirect(cherrypy.url('/'))
 
         return render('login.xhtml')
 
-    def logout(self, **kwargs):
-        logged_out()
-        raise cherrypy.HTTPRedirect(cherrypy.url('/'))
-
     @model.requires_db
-    def user(self, username):
+    def user(self, userid):
         cur = model.get_cursor()
 
-        cur.execute('''SELECT username FROM users WHERE username = ?''',
-                    (username,))
+        cur.execute('''SELECT userid FROM users WHERE loginid = ?''',
+                    (userid,))
         if cur.fetchone() is None:
             raise cherrypy.HTTPError(404, "User not found")
 
-        userposts, thispost = model.get_user_posts(username)
+        userposts, thispost = model.get_user_posts(userid)
 
-        projects = model.get_userprojects(username)
-        teamposts = model.get_teamposts(username)
+        projects = model.get_userprojects(userid)
+        teamposts = model.get_teamposts(userid)
 
-        return render('user.xhtml', username=username, projects=projects,
+        return render('user.xhtml', userid=userid, projects=projects,
                       teamposts=teamposts, userposts=userposts)
 
     @model.requires_db
-    def userposts(self, username):
-        posts = model.get_all_userposts(username)
+    def userposts(self, userid):
+        posts = model.get_all_userposts(userid)
         if not len(posts):
             raise cherrypy.HTTPError(404, "No posts found")
 
-        return render('userposts.xhtml', username=username, posts=posts)
+        return render('userposts.xhtml', userid=userid, posts=posts)
 
     @model.requires_db
-    def userpostsfeed(self, username):
-        feedposts = model.get_user_feedposts(username)
+    def userpostsfeed(self, userid):
+        feedposts = model.get_user_feedposts(userid)
 
         return renderatom(feedposts=feedposts,
-                          feedurl=cherrypy.url('/feed/%s' % username),
-                          title="Mozilla Status Board Updates: user %s" % username)
+                          feedurl=cherrypy.url('/feed/%s' % userid),
+                          title="Mozilla Status Board Updates: user %s" % userid)
 
     @model.requires_db
-    def userteamposts(self, username):
-        teamposts = model.get_teamposts(username)
-        team = model.get_userteam(username)
+    def userteamposts(self, userid):
+        teamposts = model.get_teamposts(userid)
+        team = model.get_userteam(userid)
 
-        return render('teamposts.xhtml', username=username,
+        return render('teamposts.xhtml', userid=userid,
                       teamposts=teamposts, team=team)
 
     @model.requires_db
-    def userteampostsfeed(self, username):
-        teamposts = model.get_teamposts(username)
+    def userteampostsfeed(self, userid):
+        teamposts = model.get_teamposts(userid)
 
         return renderatom(feedposts=teamposts,
-                          feedurl=cherrypy.url('/user/%s/teamposts/feed' % username),
-                          title="Mozilla Status Board Updates: User Team: %s" % username)
+                          feedurl=cherrypy.url('/user/%s/teamposts/feed' % userid),
+                          title="Mozilla Status Board Updates: User Team: %s" % userid)
 
     @require_login
     @model.requires_db
     def preferences(self, **kwargs):
-        user = cherrypy.request.loginname
+        loginid = cherrypy.request.loginid
 
         cur = model.get_cursor()
 
-        cur.execute('''SELECT email, reminderday, sendemail
-                       FROM users WHERE username = ?''',
-                    (user,))
+        cur.execute('''SELECT reminderday, sendemail
+                       FROM users WHERE email = ?''',
+                    (loginid,))
         r = cur.fetchone()
         if r is None:
             raise cherrypy.HTTPError(404, "User not found")
 
-        email, reminderday, sendemail = r
+        reminderday, sendemail = r
 
         if cherrypy.request.method.upper() == 'POST':
-            oldpassword = kwargs.pop('oldpassword')
-
-            if oldpassword != '':
-                cur.execute('''SELECT username FROM users
-                               WHERE username = ? AND password = ?''',
-                            (user, oldpassword))
-                if cur.fetchone() is None:
-                    raise cherrypy.HTTPError(409, "Invalid username/password")
-
-                password = kwargs.pop('newpassword1')
-                password2 = kwargs.pop('newpassword2')
-                if password != password2:
-                    raise cherrypy.HTTPError(409, "The passwords don't match")
-
-                if password != '':
-                    cur.execute('''UPDATE users
-                                   SET password = ?
-                                   WHERE username = ?''', (password, user))
-
-            email = kwargs.pop('email')
-            email = (None, email)[email is not None]
-
             reminderday = kwargs.pop('reminderday')
             if reminderday == '-':
                 reminderday = None
@@ -241,45 +173,47 @@ class Root(object):
                 sendemail = int(sendemail)
 
             cur.execute('''UPDATE users
-                           SET email = ?, reminderday = ?, sendemail = ?
-                           WHERE username = ?''',
-                        (email, reminderday, sendemail, user))
+                           SET reminderday = ?, sendemail = ?
+                           WHERE userid = ?''',
+                        (reminderday, sendemail, loginid))
 
             projectdata = []
             for k, v in kwargs.iteritems():
                 if k.startswith('updateproject_') and v == '1':
                     project = k[14:]
                     if kwargs.get('project_%s' % project, False) == '1':
-                        projectdata.append((user, project))
+                        projectdata.append((loginid, project))
 
-            cur.execute('''DELETE FROM userprojects WHERE username = ?''', (user,))
-            cur.executemany('''INSERT INTO userprojects (username, projectname) VALUES (?, ?)''', projectdata)
+            cur.execute('''DELETE FROM userprojects WHERE userid = ?''', (loginid,))
+            cur.executemany('''INSERT INTO userprojects (userid, projectname) VALUES (?, ?)''', projectdata)
 
 
         cur.execute('''SELECT projectname,
                          EXISTS(SELECT * FROM userprojects
-                                WHERE username = ?
+                                WHERE userid = ?
                                   AND userprojects.projectname = projects.projectname)
                        FROM projects ORDER BY projectname''',
-                    (user,))
+                    (loginid,))
         projects = cur.fetchall()
 
-        return render('me.xhtml', email=email, reminderday=reminderday,
+        return render('me.xhtml', reminderday=reminderday,
                       sendemail=sendemail, projects=projects)
 
     @require_login
     @model.requires_db
     def post(self, completed, planned, tags, isedit=False):
-        user = cherrypy.request.loginname
+        loginid = cherrypy.request.loginid
 
         assert cherrypy.request.method.upper() == 'POST'
 
         cur = model.get_cursor()
-        cur.execute('''SELECT email
-                       FROM users
-                       WHERE username = ?''',
-                    (user,))
-        email, = cur.fetchone()
+
+        # TODO: let email be separate from login ID
+        # cur.execute('''SELECT email
+        #                FROM users
+        #                WHERE loginid = ?''',
+        #             (loginid,))
+        # email, = cur.fetchone()
 
         completed = completed or None
         planned = planned or None
@@ -291,32 +225,32 @@ class Root(object):
         if isedit:
             cur.execute('''UPDATE posts
                            SET completed = ?, planned = ?, tags = ?, posttime = ?
-                           WHERE username = ?
+                           WHERE userid = ?
                              AND postdate = (
                                SELECT lastpostdate FROM (
                                  SELECT MAX(postdate) AS lastpostdate
                                  FROM posts AS p2
-                                 WHERE p2.username = ?
+                                 WHERE p2.userid = ?
                                ) AS maxq
                              )''',
-                        (completed, planned, tags, now, user, user))
+                        (completed, planned, tags, now, loginid, loginid))
         else:
             cur.execute('''INSERT INTO posts
-                           (username, postdate, posttime, completed, planned, tags)
+                           (userid, postdate, posttime, completed, planned, tags)
                            VALUES (?, ?, ?, ?, ?, ?)''',
-                        (user, today, now, completed, planned, tags))
+                        (loginid, today, now, completed, planned, tags))
 
-        allteam, sendnow = model.get_userteam_emails(user)
+        allteam, sendnow = model.get_userteam_emails(loginid)
         if len(sendnow):
-            mail.sendpost(email, allteam, sendnow,
-                          Post((user, today, now, completed, planned, tags)))
+            mail.sendpost(loginid, allteam, sendnow,
+                          Post((loginid, today, now, completed, planned, tags)))
 
         raise cherrypy.HTTPRedirect(cherrypy.url('/'))
 
     @require_login
     @model.requires_db
     def createproject(self, projectname):
-        username = cherrypy.request.loginname
+        loginid = cherrypy.request.loginid
 
         if len(projectname) < 3:
             raise cherrypy.HTTPError(409, "Project name is not long enough")
@@ -324,10 +258,10 @@ class Root(object):
         cur = model.get_cursor()
         cur.execute('''INSERT INTO projects (projectname, createdby)
                        VALUES (?, ?)''',
-                    (projectname, username))
-        cur.execute('''INSERT INTO userprojects (username, projectname)
+                    (projectname, loginid))
+        cur.execute('''INSERT INTO userprojects (userid, projectname)
                        VALUES (?, ?)''',
-                    (username, projectname))
+                    (loginid, projectname))
 
         raise cherrypy.HTTPRedirect(cherrypy.url('/project/%s' % projectname))
 
@@ -366,15 +300,14 @@ connect('/', 'index')
 connect('/posts', 'posts')
 connect('/signup', 'signup', methods=('GET', 'POST'))
 connect('/login', 'login', methods=('GET', 'POST'))
-connect('/logout', 'logout', methods=('POST',))
 connect('/post', 'post', methods=('POST',))
 connect('/preferences', 'preferences', methods=('GET', 'POST'))
 connect('/feed', 'feed')
-connect('/user/{username}', 'user')
-connect('/user/{username}/posts', 'userposts')
-connect('/user/{username}/posts/feed', 'userpostsfeed')
-connect('/user/{username}/teamposts', 'userteamposts')
-connect('/user/{username}/teamposts/feed', 'userteampostsfeed')
+connect('/user/{userid}', 'user')
+connect('/user/{userid}/posts', 'userposts')
+connect('/user/{userid}/posts/feed', 'userpostsfeed')
+connect('/user/{userid}/teamposts', 'userteamposts')
+connect('/user/{userid}/teamposts/feed', 'userteampostsfeed')
 connect('/createproject', 'createproject', methods=('POST',))
 connect('/project/{projectname}', 'project')
 connect('/project/{projectname}/feed', 'projectfeed')

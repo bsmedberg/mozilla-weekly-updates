@@ -5,8 +5,8 @@ _genericfrom = 'Mozilla Status Updates <noreply@smedbergs.us>'
 
 def rendermail(template, subject, **kwargs):
     t = main.loader.load(template)
-    htmlBody = t.generate(loginname=None, subject=subject, **kwargs)
-    textBody = t.generate(loginname=None, subject=subject, **kwargs)
+    htmlBody = t.generate(loginid=None, subject=subject, **kwargs)
+    textBody = t.generate(loginid=None, subject=subject, **kwargs)
     return htmlBody.render('html'), textBody.render('text')
 
 def sendmails(messages, fromaddress=None, recipientlist=None, app=None):
@@ -40,7 +40,7 @@ def sendmails(messages, fromaddress=None, recipientlist=None, app=None):
         pass
 
 def sendpost(fromaddress, tolist, recipientlist, post):
-    subject = "Status Update: %s on %s" % (post.username, post.postdate.isoformat())
+    subject = "Status Update: %s on %s" % (post.loginid, post.postdate.isoformat())
 
     message = email.mime.multipart.MIMEMultipart('alternative')
     message['To'] = ', '.join(tolist)
@@ -70,7 +70,7 @@ def getdigest(to, subject, posts):
     return message
 
 def getnags(cur):
-    for username, usermail, lastpostdate in model.get_naglist(cur):
+    for userid, usermail, lastpostdate in model.get_naglist(cur):
         nag = """This is a friendly reminder from the Mozilla Status Board. """
         if lastpostdate is None:
             nag += "You have never made a post! "
@@ -81,7 +81,7 @@ def getnags(cur):
 
         nag += "\n\nhttp://benjamin.smedbergs.us/weekly-updates.fcgi/"
 
-        print "Sending nag to %s <%s>" % (username, usermail)
+        print "Sending nag to %s <%s>" % (userid, usermail)
 
         message = email.mime.text.MIMEText(nag, 'plain', 'UTF-8')
         message['To'] = usermail
@@ -94,9 +94,9 @@ def getnags(cur):
 def getdaily(cur):
     yesterday = util.today() - datetime.timedelta(1)
 
-    for username, email, posts in model.iter_daily(cur, yesterday):
+    for userid, email, posts in model.iter_daily(cur, yesterday):
         if len(posts):
-            print "Sending daily update to %s <%s>" % (username, email)
+            print "Sending daily update to %s <%s>" % (userid, email)
             yield getdigest(email,
                             "Status Updates for %s" % yesterday.isoformat(),
                             posts)
@@ -105,9 +105,9 @@ def getweekly(cur):
     yesterday = util.today() - datetime.timedelta(1)
     lastweek = util.today() - datetime.timedelta(7)
 
-    for username, email, posts in model.iter_weekly(cur, lastweek, yesterday):
+    for userid, email, posts in model.iter_weekly(cur, lastweek, yesterday):
         if len(posts):
-            print "Sending weekly update to %s <%s>" % (username, email)
+            print "Sending weekly update to %s <%s>" % (userid, email)
 
             subject = "Status Updates for %s through %s" % \
                 (lastweek.isoformat(), yesterday.isoformat()),

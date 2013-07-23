@@ -84,24 +84,24 @@ def get_cursor():
 
 def get_users():
     cur = get_cursor()
-    cur.execute('''SELECT username FROM users ORDER BY username''')
-    return [user for user, in cur.fetchall()]
+    cur.execute('''SELECT userid FROM users ORDER BY userid''')
+    return [userid for userid, in cur.fetchall()]
 
 def get_projects():
     cur = get_cursor()
     cur.execute('''SELECT projectname FROM projects ORDER BY projectname''')
     return [project for project, in cur.fetchall()]
 
-def get_user_posts(username):
+def get_user_posts(userid):
     """
     Get the 10 most recent posts by this username, and get today's post if there is one today.
     @returns posts, thispost
     """
     cur = get_cursor()
-    cur.execute('''SELECT username, postdate, posttime, completed, planned, tags
+    cur.execute('''SELECT userid, postdate, posttime, completed, planned, tags
                    FROM posts
-                   WHERE username = ?
-                   ORDER BY postdate DESC, posttime DESC LIMIT 10''', (username,))
+                   WHERE userid = ?
+                   ORDER BY postdate DESC, posttime DESC LIMIT 10''', (userid,))
     posts = [Post(r) for r in cur.fetchall()]
     if not len(posts):
         posts.append(Post(None))
@@ -113,41 +113,41 @@ def get_user_posts(username):
 
     return posts, thispost
 
-def get_user_feedposts(username):
+def get_user_feedposts(userid):
     cur = get_cursor()
-    cur.execute('''SELECT username, postdate, posttime, completed, planned, tags
+    cur.execute('''SELECT userid, postdate, posttime, completed, planned, tags
                    FROM posts
-                   WHERE username = ?
+                   WHERE userid = ?
                      AND postdate >= ?
                    ORDER BY postdate DESC, posttime DESC''',
-                (username, util.today().toordinal() - 15))
+                (userid, util.today().toordinal() - 15))
     return [Post(d) for d in cur.fetchall()]
 
-def get_all_userposts(username):
+def get_all_userposts(userid):
     cur = get_cursor()
-    cur.execute('''SELECT username, postdate, posttime, completed, planned, tags
+    cur.execute('''SELECT userid, postdate, posttime, completed, planned, tags
                    FROM posts
-                   WHERE username = ?
-                   ORDER BY postdate DESC, posttime DESC''', (username,))
+                   WHERE userid = ?
+                   ORDER BY postdate DESC, posttime DESC''', (userid,))
     return [Post(r) for r in cur.fetchall()]
 
-def get_teamposts(username):
+def get_teamposts(userid):
     cur = get_cursor()
-    cur.execute('''SELECT username, postdate, posttime, completed, planned, tags
+    cur.execute('''SELECT userid, postdate, posttime, completed, planned, tags
                    FROM posts
                    WHERE postdate = (SELECT MAX(postdate)
                                      FROM posts AS p2
-                                     WHERE p2.username = posts.username)
+                                     WHERE p2.userid = posts.userid)
                      AND EXISTS(SELECT * FROM userprojects AS u1, userprojects AS u2
                                 WHERE u1.projectname = u2.projectname
-                                  AND u1.username = posts.username
-                                  AND u2.username = ?)
-                     ORDER BY postdate DESC, posttime DESC''', (username,))
+                                  AND u1.userid = posts.userid
+                                  AND u2.userid = ?)
+                     ORDER BY postdate DESC, posttime DESC''', (userid,))
     return [Post(d) for d in cur.fetchall()]
 
 def get_feedposts():
     cur = get_cursor()
-    cur.execute('''SELECT username, postdate, posttime, completed, planned, tags
+    cur.execute('''SELECT userid, postdate, posttime, completed, planned, tags
                    FROM posts
                    WHERE postdate > ?
                    ORDER BY postdate DESC, posttime DESC''',
@@ -156,120 +156,120 @@ def get_feedposts():
 
 def get_recentposts():
     cur = get_cursor()
-    cur.execute('''SELECT username, postdate, posttime, completed, planned, tags
+    cur.execute('''SELECT userid, postdate, posttime, completed, planned, tags
                    FROM posts
                    WHERE postdate = (SELECT MAX(postdate)
                                      FROM posts AS p2
-                                     WHERE p2.username = posts.username)
+                                     WHERE p2.userid = posts.userid)
                      AND postdate > ?
                    ORDER BY postdate DESC, posttime DESC''',
                 (util.today().toordinal() - 15,))
     return [Post(d) for d in cur.fetchall()]
 
-def get_userprojects(username):
+def get_userprojects(userid):
     cur = get_cursor()
     cur.execute('''SELECT projectname
                    FROM userprojects
-                   WHERE username = ?
+                   WHERE userid = ?
                    ORDER BY projectname''',
-                (username,))
-    return [username for username, in cur.fetchall()]
+                (userid,))
+    return [project for project, in cur.fetchall()]
 
-def get_userteam(username):
+def get_userteam(userid):
     cur = get_cursor()
-    cur.execute('''SELECT u2.username, group_concat(u2.projectname)
+    cur.execute('''SELECT u2.userid, group_concat(u2.projectname)
                    FROM userprojects AS u1, userprojects AS u2
-                   WHERE u1.username = ?
+                   WHERE u1.userid = ?
                      AND u2.projectname = u1.projectname
-                   GROUP BY u2.username
-                   ORDER BY u2.username''',
-                (username,))
+                   GROUP BY u2.userid
+                   ORDER BY u2.userid''',
+                (userid,))
 
     return cur.fetchall()
 
-def get_userteam_emails(username):
+def get_userteam_emails(userid):
     cur = get_cursor()
     cur.execute('''SELECT email, sendemail
                    FROM users
                    WHERE EXISTS(SELECT *
                                 FROM userprojects AS u1, userprojects AS u2
-                                WHERE u1.username = ?
+                                WHERE u1.userid = ?
                                   AND u2.projectname = u1.projectname
-                                  AND u2.username = users.username)
+                                  AND u2.userid = users.userid)
                      AND email IS NOT NULL''',
-                (username,))
+                (userid,))
     r = cur.fetchall()
     return ([email for email, sendemail in r], [email for email, sendemail in r if sendemail == 0])
 
 def get_project_users(projectname):
     cur = get_cursor()
-    cur.execute('''SELECT username FROM userprojects
+    cur.execute('''SELECT userid FROM userprojects
                    WHERE projectname = ?
-                   ORDER BY username ASC''', (projectname,))
-    return [projectname for projectname, in cur.fetchall()]
+                   ORDER BY userid ASC''', (projectname,))
+    return [userid for userid, in cur.fetchall()]
 
 def get_project_late(projectname):
     cur = get_cursor()
-    cur.execute('''SELECT userprojects.username, MAX(postdate) AS lastpostdate
-                   FROM userprojects LEFT OUTER JOIN posts ON posts.username = userprojects.username
+    cur.execute('''SELECT userprojects.userid, MAX(postdate) AS lastpostdate
+                   FROM userprojects LEFT OUTER JOIN posts ON posts.userid = userprojects.userid
                    WHERE projectname = ?
-                   GROUP BY userprojects.username
+                   GROUP BY userprojects.userid
                    HAVING lastpostdate IS NULL OR lastpostdate < ?''',
                 (projectname, util.today().toordinal() - 6))
-    return [(username, lastpostdate is not None and datetime.date.fromordinal(lastpostdate) or None)
-            for username, lastpostdate in cur.fetchall()]
+    return [(userid, lastpostdate is not None and datetime.date.fromordinal(lastpostdate) or None)
+            for userid, lastpostdate in cur.fetchall()]
 
 def get_project_posts(projectname):
     cur = get_cursor()
-    cur.execute('''SELECT username, postdate, posttime, completed, planned, tags
+    cur.execute('''SELECT userid, postdate, posttime, completed, planned, tags
                    FROM posts
                    WHERE postdate = (SELECT MAX(postdate)
                                      FROM posts AS p2
-                                     WHERE p2.username = posts.username)
+                                     WHERE p2.userid = posts.userid)
                      AND exists (SELECT * from userprojects
-                                 WHERE userprojects.username = posts.username
+                                 WHERE userprojects.userid = posts.userid
                                  AND userprojects.projectname = ?)
                    ORDER BY postdate DESC, posttime DESC''', (projectname,))
     return [Post(d) for d in cur.fetchall()]
 
 def get_naglist(cur):
-    cur.execute('''SELECT users.username, email, MAX(postdate) AS lastpostdate
-                   FROM users LEFT OUTER JOIN posts ON posts.username = users.username
+    cur.execute('''SELECT users.userid, email, MAX(postdate) AS lastpostdate
+                   FROM users LEFT OUTER JOIN posts ON posts.userid = users.userid
                    WHERE reminderday = ? AND email IS NOT NULL
-                   GROUP BY users.username
+                   GROUP BY users.userid
                    HAVING lastpostdate IS NULL or lastpostdate < ?''',
                 (util.today().weekday(), util.today().toordinal() - 6))
-    return [(username, email, lastpostdate is not None and datetime.date.fromordinal(lastpostdate) or None)
-            for username, email, lastpostdate in cur.fetchall()]
+    return [(userid, email, lastpostdate is not None and datetime.date.fromordinal(lastpostdate) or None)
+            for userid, email, lastpostdate in cur.fetchall()]
 
 def iter_daily(cur, day):
-    cur.execute('''SELECT username, email
+    cur.execute('''SELECT userid, email
                    FROM users
                    WHERE sendemail = 1''')
-    for username, email in cur.fetchall():
-        cur.execute('''SELECT username, postdate, posttime, completed, planned, tags
+    for userid, email in cur.fetchall():
+        cur.execute('''SELECT userid, postdate, posttime, completed, planned, tags
                        FROM posts
                        WHERE postdate = ?
                          AND EXISTS(SELECT * FROM userprojects AS u1, userprojects AS u2
                                     WHERE u1.projectname = u2.projectname
-                                    AND u1.username = posts.username
-                                    AND u2.username = ?)
+                                    AND u1.userid = posts.userid
+                                    AND u2.userid = ?)
                        ORDER BY postdate ASC, posttime ASC''',
-                    (day.toordinal(), username))
-        yield username, email, [Post(r) for r in cur.fetchall()]
+                    (day.toordinal(), userid))
+        yield userid, email, [Post(r) for r in cur.fetchall()]
 
 def iter_weekly(cur, start, end):
-    cur.execute('''SELECT username, email
+    cur.execute('''SELECT userid, email
                    FROM users
                    WHERE sendemail = 2''')
-    for username, email in cur.fetchall():
-        cur.execute('''SELECT username, postdate, posttime, completed, planned, tags
+    for userid, email in cur.fetchall():
+        cur.execute('''SELECT userid, postdate, posttime, completed, planned, tags
                        FROM posts
                        WHERE postdate >= ? AND postdate <= ?
                          AND EXISTS(SELECT * FROM userprojects AS u1, userprojects AS u2
                                     WHERE u1.projectname = u2.projectname
-                                    AND u1.username = posts.username
-                                    AND u2.username = ?)
+                                    AND u1.userid = posts.userid
+                                    AND u2.userid = ?)
                        ORDER BY postdate ASC, posttime ASC''',
-                    (start.toordinal(), end.toordinal(), username))
-        yield username, email, [Post(r) for r in cur.fetchall()]
+                    (start.toordinal(), end.toordinal(), userid))
+        yield userid, email, [Post(r) for r in cur.fetchall()]

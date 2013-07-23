@@ -7,18 +7,19 @@
   <head>
     <title>Mozilla Status Board</title>
     <link href="${genlink('feed')}" type="application/atom+xml" rel="alternate" title="Recent Posts (All Users)"/>
-    <link py:if="loginname is not None"
-          href="${genlink('user', loginname, 'teamposts', 'feed')}"
+    <link py:if="loginid is not None"
+          href="${genlink('user', loginid, 'teamposts', 'feed')}"
           type="application/atom+xml" rel="alternate" title="My Team Posts"/>
+    <link rel="icon" type="image/png" href="${genlink('static/weekly-updates-icon.png')}"/>
   </head>
   <body class="2col">
     <div id="col1">
-      <py:if test="loginname is None">
+      <py:if test="loginid is None">
         <h2>Login</h2>
         ${loginform()}
       </py:if>
 
-      <py:if test="loginname is not None">
+      <py:if test="loginid is not None">
         <h2>Current Status
           <span class="subhead" py:if="userposts[0].postdate is not None">
             - Posted on ${userposts[0].postdate.isoformat()}
@@ -37,7 +38,7 @@
       <ul class="bordered">
         <li py:for="project in projects"><a href="${genlink('project', project)}">${project}</a></li>
       </ul>
-      <form py:if="loginname is not None" action="${genlink('createproject')}"
+      <form py:if="loginid is not None" action="${genlink('createproject')}"
             method="POST">
         <h3>Create a New Project</h3>
         <label for="projectname">Project name:</label>
@@ -46,16 +47,16 @@
       </form>
     </div>
     <div id="col2">
-      <py:if test="loginname is not None">
-        <h2><a href="${genlink('user', loginname, 'teamposts')}">Your Team Posts</a>
-          <a href="${genlink('user', loginname, 'teamposts', 'feed')}" class="feedlink"/>
+      <py:if test="loginid is not None">
+        <h2><a href="${genlink('user', loginid, 'teamposts')}">Your Team Posts</a>
+          <a href="${genlink('user', loginid, 'teamposts', 'feed')}" class="feedlink"/>
         </h2>
 
         ${postlist(teamposts)}
 
         <h2 class="standalone"><a href="${genlink('posts')}">Recent Posts (All Users)</a></h2>
       </py:if>
-      <py:if test="loginname is None">
+      <py:if test="loginid is None">
         <h2>Recent Posts (All Users)
           <a href="${genlink('feed')}" class="feedlink"/>
         </h2>
