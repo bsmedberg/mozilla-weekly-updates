@@ -1,0 +1,31 @@
+<!-- -*- Mode: XML -*- -->
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:py="http://genshi.edgewall.org/"
+      xmlns:xi="http://www.w3.org/2001/XInclude">
+  <xi:include href="common.xhtml"/>
+
+  <head>
+    <title>Markdown Details</title>
+  </head>
+  <body class="nocols">
+    <h2>Markdown Details</h2>
+
+    <p>In general, status updates use markdown syntax. See <a href="http://daringfireball.net/projects/markdown/">daringfireball.net</a> for details about Markdown.</p>
+
+    <p>The following extras are supported:
+      <ul>
+	<li>Automatic linkifying: Anything that looks like a link starting with http: or https: will automatically be made into a link.</li>
+	<li>Automatic bug linkifying. Things like "bug 12345" will be auto-linked to bugzilla.mozilla.org.</li>
+	<li>Cuddled lists: a new line that starts with a start will be made into a list (normal markdown requires an intermediate blank line).</li>
+      </ul>
+    </p>
+
+    <p>Sometimes, the extensions will cause problems, or there
+      may be bugs in the <a href="https://github.com/trentm/python-markdown2">python-markdown2</a> parsing module. If the parser throws an exception, this
+      site falls back to showing the content as plain text.</p>
+
+    <p>If you encounter a bad parsing behavior, please copy the exact input
+      text and paste into a <a href="https://github.com/bsmedberg/mozilla-weekly-updates/issues">github issue</a>.</p>
+  </body>
+</html>
+

@@ -296,6 +296,9 @@ class Root(object):
                           feedurl=cherrypy.url('/project/%s' % projectname),
                           title="Mozilla Status Board Updates: Project %s" % projectname)
 
+    def markup(self):
+        return render('markup.xhtml')
+
 dispatcher = cherrypy.dispatch.RoutesDispatcher()
 dispatcher.controllers['root'] = Root()
 
@@ -320,6 +323,7 @@ connect('/user/{userid}/teamposts/feed', 'userteampostsfeed')
 connect('/createproject', 'createproject', methods=('POST',))
 connect('/project/{projectname}', 'project')
 connect('/project/{projectname}/feed', 'projectfeed')
+connect('/markup', 'markup')
 
 def render_error(**kwargs):
     return render('error.xhtml', **kwargs)

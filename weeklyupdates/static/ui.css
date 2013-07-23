@@ -182,3 +182,13 @@ textarea {
 .hidden {
   display: none;
 }
+
+.right-note {
+  float: right;
+  color: #444;
+  font-size: smaller;
+}
+
+.right-note a {
+  color: inherit !important;
+}
