@@ -6,6 +6,7 @@ Requirements
 * Routes
 * MySQL
 * MySQL for Python
+* python-markdown2
 
 Install and Config of Prereqs
 -----------------------------
@@ -39,6 +40,10 @@ sudo ln -s /usr/local/mysql/lib/libmysqlclient.18.dylib /usr/lib/libmysqlclient.
 6. MySQL for Python
 a. Download from http://sourceforge.net/projects/mysql-python/
 b. Follow installation instructions in INSTALL
+
+7. python-markdown2
+a. clone from https://github.com/trentm/python-markdown2
+b. sudo python setup.py install (pass --user to install it without sudo)
 
 Weekly Updates Config
 ---------------------
