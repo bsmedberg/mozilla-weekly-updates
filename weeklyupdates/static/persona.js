@@ -42,6 +42,8 @@ function doPreview()
   form.action = kPreviewURL;
   form.target = "previewFrame";
   form.submit();
+  form.action = oldAction;
+  form.target = "_self";
 }
 
 function clearPreview()
