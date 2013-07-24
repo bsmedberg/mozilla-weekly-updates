@@ -192,3 +192,8 @@ textarea {
 .right-note a {
   color: inherit !important;
 }
+
+.note {
+  margin: 5px;
+  background-color: #C9F2E7;
+}
