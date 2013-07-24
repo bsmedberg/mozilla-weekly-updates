@@ -40,7 +40,7 @@ def sendmails(messages, fromaddress=None, recipientlist=None, app=None):
         pass
 
 def sendpost(fromaddress, tolist, recipientlist, post):
-    subject = "Status Update: %s on %s" % (post.loginid, post.postdate.isoformat())
+    subject = "Status Update: %s on %s" % (post.userid, post.postdate.isoformat())
 
     message = email.mime.multipart.MIMEMultipart('alternative')
     message['To'] = ', '.join(tolist)

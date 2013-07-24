@@ -81,8 +81,8 @@ class Root(object):
                         (loginid))
             if cur.fetchone() is None:
                 cur.execute('''INSERT INTO users
-                               (username, userid, email) VALUES (?, ?, ?)''',
-                            (loginid, loginid, loginid))
+                               (userid, email) VALUES (?, ?)''',
+                            (loginid, loginid))
                 logged_in(loginid)
                 raise cherrypy.HTTPRedirect(cherrypy.url('/preferences'))
             logged_in(loginid)
@@ -97,7 +97,7 @@ class Root(object):
     def user(self, userid):
         cur = model.get_cursor()
 
-        cur.execute('''SELECT userid FROM users WHERE loginid = ?''',
+        cur.execute('''SELECT userid FROM users WHERE userid = ?''',
                     (userid,))
         if cur.fetchone() is None:
             raise cherrypy.HTTPError(404, "User not found")

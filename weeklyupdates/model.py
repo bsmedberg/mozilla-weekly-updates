@@ -82,11 +82,6 @@ def requires_db(f):
 def get_cursor():
     return cherrypy.request.weeklycur
 
-def get_users():
-    cur = get_cursor()
-    cur.execute('''SELECT userid FROM users ORDER BY userid''')
-    return [userid for userid, in cur.fetchall()]
-
 def get_projects():
     cur = get_cursor()
     cur.execute('''SELECT projectname FROM projects ORDER BY projectname''')
@@ -214,7 +209,8 @@ def get_project_late(projectname):
                    FROM userprojects LEFT OUTER JOIN posts ON posts.userid = userprojects.userid
                    WHERE projectname = ?
                    GROUP BY userprojects.userid
-                   HAVING lastpostdate IS NULL OR lastpostdate < ?''',
+                   HAVING lastpostdate IS NULL OR lastpostdate < ?
+                   ORDER BY lastpostdate ASC''',
                 (projectname, util.today().toordinal() - 6))
     return [(userid, lastpostdate is not None and datetime.date.fromordinal(lastpostdate) or None)
             for userid, lastpostdate in cur.fetchall()]
