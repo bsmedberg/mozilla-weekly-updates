@@ -28,7 +28,6 @@ class Root(object):
         loginid = cherrypy.request.loginid
 
         projects = model.get_projects()
-        users = model.get_users()
 
         if loginid is None:
             teamposts = None
@@ -40,7 +39,7 @@ class Root(object):
             userposts, todaypost = model.get_user_posts(loginid)
             recent = None
 
-        return render('index.xhtml', projects=projects, users=users, recent=recent,
+        return render('index.xhtml', projects=projects, recent=recent,
                       teamposts=teamposts, userposts=userposts, todaypost=todaypost)
 
     @model.requires_db
