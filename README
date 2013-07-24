@@ -7,6 +7,7 @@ Requirements
 * MySQL
 * MySQL for Python
 * python-markdown2
+* PyBrowserID
 
 Install and Config of Prereqs
 -----------------------------
@@ -44,6 +45,10 @@ b. Follow installation instructions in INSTALL
 7. python-markdown2
 a. clone from https://github.com/trentm/python-markdown2
 b. sudo python setup.py install (pass --user to install it without sudo)
+
+8. PyBrowserID
+a. either easy_install PyBrowserID or
+b. clone https://github.com/mozilla/PyBrowserID and python setup.py install
 
 Weekly Updates Config
 ---------------------
