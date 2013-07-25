@@ -28,6 +28,7 @@ class ConnectionPool(object):
                     return MySQLdb.cursors.Cursor.executemany(self, q, *args)
 
             connectfn = lambda: MySQLdb.connect(cursorclass=MySQLCursorWrapper,
+                                                charset='utf8',
                                                 **connectargs)
 
         self.connectfn = connectfn
