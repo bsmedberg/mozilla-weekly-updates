@@ -11,7 +11,8 @@ link_patterns = (
 
 md = markdown2.Markdown(html4tags=True, tab_width=2,
                         extras=['link-patterns',
-                                'cuddled-lists'],
+                                'cuddled-lists',
+                                'code-friendly'],
                         link_patterns=link_patterns)
 
 class Post(object):
