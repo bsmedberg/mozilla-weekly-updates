@@ -194,6 +194,8 @@ textarea {
 }
 
 .note {
-  margin: 5px;
+  width: 80%;
+  width: calc(100% - 30px);
+  margin: 5px 15px;
   background-color: #C9F2E7;
 }
