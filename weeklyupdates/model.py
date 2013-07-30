@@ -185,14 +185,13 @@ def get_userteam(userid):
 
 def get_userteam_emails(userid):
     cur = get_cursor()
-    cur.execute('''SELECT email, sendemail
+    cur.execute('''SELECT IFNULL(email, userid), sendemail
                    FROM users
                    WHERE EXISTS(SELECT *
                                 FROM userprojects AS u1, userprojects AS u2
                                 WHERE u1.userid = ?
                                   AND u2.projectname = u1.projectname
-                                  AND u2.userid = users.userid)
-                     AND email IS NOT NULL''',
+                                  AND u2.userid = users.userid)''',
                 (userid,))
     r = cur.fetchall()
     return ([email for email, sendemail in r], [email for email, sendemail in r if sendemail == 0])
@@ -230,7 +229,7 @@ def get_project_posts(projectname):
     return [Post(d) for d in cur.fetchall()]
 
 def get_naglist(cur):
-    cur.execute('''SELECT users.userid, email, MAX(postdate) AS lastpostdate
+    cur.execute('''SELECT users.userid, IFNULL(email, users.userid), MAX(postdate) AS lastpostdate
                    FROM users LEFT OUTER JOIN posts ON posts.userid = users.userid
                    WHERE reminderday = ? AND email IS NOT NULL
                    GROUP BY users.userid
@@ -240,7 +239,7 @@ def get_naglist(cur):
             for userid, email, lastpostdate in cur.fetchall()]
 
 def iter_daily(cur, day):
-    cur.execute('''SELECT userid, email
+    cur.execute('''SELECT userid, IFNULL(email, userid)
                    FROM users
                    WHERE sendemail = 1''')
     for userid, email in cur.fetchall():
@@ -256,7 +255,7 @@ def iter_daily(cur, day):
         yield userid, email, [Post(r) for r in cur.fetchall()]
 
 def iter_weekly(cur, start, end):
-    cur.execute('''SELECT userid, email
+    cur.execute('''SELECT userid, IFNULL(email, userid)
                    FROM users
                    WHERE sendemail = 2''')
     for userid, email in cur.fetchall():

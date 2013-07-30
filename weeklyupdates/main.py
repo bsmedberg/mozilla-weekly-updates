@@ -149,16 +149,20 @@ class Root(object):
 
         cur = model.get_cursor()
 
-        cur.execute('''SELECT reminderday, sendemail
-                       FROM users WHERE email = ?''',
+        cur.execute('''SELECT email, reminderday, sendemail
+                       FROM users WHERE userid = ?''',
                     (loginid,))
         r = cur.fetchone()
         if r is None:
             raise cherrypy.HTTPError(404, "User not found")
 
-        reminderday, sendemail = r
+        email, reminderday, sendemail = r
 
         if cherrypy.request.method.upper() == 'POST':
+            email = kwargs.pop('email')
+            if email == '':
+                email = None
+
             reminderday = kwargs.pop('reminderday')
             if reminderday == '-':
                 reminderday = None
@@ -172,9 +176,9 @@ class Root(object):
                 sendemail = int(sendemail)
 
             cur.execute('''UPDATE users
-                           SET reminderday = ?, sendemail = ?
+                           SET email = ?, reminderday = ?, sendemail = ?
                            WHERE userid = ?''',
-                        (reminderday, sendemail, loginid))
+                        (email, reminderday, sendemail, loginid))
 
             projectdata = []
             for k, v in kwargs.iteritems():
@@ -195,7 +199,7 @@ class Root(object):
                     (loginid,))
         projects = cur.fetchall()
 
-        return render('me.xhtml', reminderday=reminderday,
+        return render('me.xhtml', email=email, reminderday=reminderday,
                       sendemail=sendemail, projects=projects)
 
     def preview(self, completed, planned, tags):
@@ -215,12 +219,11 @@ class Root(object):
 
         cur = model.get_cursor()
 
-        # TODO: let email be separate from login ID
-        # cur.execute('''SELECT email
-        #                FROM users
-        #                WHERE loginid = ?''',
-        #             (loginid,))
-        # email, = cur.fetchone()
+        cur.execute('''SELECT IFNULL(email, userid)
+                       FROM users
+                       WHERE userid = ?''',
+                    (loginid,))
+        email, = cur.fetchone()
 
         completed = completed or None
         planned = planned or None
@@ -249,7 +252,7 @@ class Root(object):
 
         allteam, sendnow = model.get_userteam_emails(loginid)
         if len(sendnow):
-            mail.sendpost(loginid, allteam, sendnow,
+            mail.sendpost(email, allteam, sendnow,
                           Post((loginid, today, now, completed, planned, tags)))
 
         raise cherrypy.HTTPRedirect(cherrypy.url('/'))
