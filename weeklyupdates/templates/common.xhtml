@@ -13,6 +13,7 @@ import json
   <head py:match="head">
     ${select("*|text()")}
     <link type="text/css" rel="stylesheet" href="${cherrypy.url('/static/ui.css')}" />
+    <link rel="icon" type="image/png" href="${genlink('static/weekly-updates-icon.png')}"/>
   </head>
 
   <body py:match="body" class="normalcols" py:attrs="select('@*')">
