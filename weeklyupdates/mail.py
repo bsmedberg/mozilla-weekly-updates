@@ -110,7 +110,7 @@ def getweekly(cur):
             print "Sending weekly update to %s <%s>" % (userid, email)
 
             subject = "Status Updates for %s through %s" % \
-                (lastweek.isoformat(), yesterday.isoformat()),
+                (lastweek.isoformat(), yesterday.isoformat())
             yield getdigest(email, subject, posts)
 
 def sendtodaysmail(app):
