@@ -44,7 +44,7 @@ def sendpost(fromaddress, tolist, recipientlist, post):
 
     message = email.mime.multipart.MIMEMultipart('alternative')
     message['To'] = ', '.join(tolist)
-    message['From'] = fromaddress
+    message['From'] = _genericfrom
     message['Sender'] = 'weekly-updates@smedbergs.us'
     message['Subject'] = subject
     message['List-Id'] = '<weekly-updates.mozilla.com>'
