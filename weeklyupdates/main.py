@@ -253,7 +253,10 @@ class Root(object):
         allteam, sendnow = model.get_userteam_emails(loginid)
         if len(sendnow):
             mail.sendpost(email, allteam, sendnow,
-                          Post((loginid, today, now, completed.decode("utf-8"), planned.decode("utf-8"), tags.decode("utf-8"))))
+                          Post((loginid, today, now,
+                                completed and completed.decode("utf-8"),
+                                planned and planned.decode("utf-8"),
+                                tags and tags.decode("utf-8"))))
 
         raise cherrypy.HTTPRedirect(cherrypy.url('/'))
 
