@@ -207,7 +207,7 @@ class Root(object):
 
         today = util.today().toordinal()
         now = util.now()
-        post = Post(('<preview>', today, now, completed, planned, tags))        
+        post = Post(('<preview>', today, now, completed.decode("utf-8"), planned.decode("utf-8"), tags.decode("utf-8")))
         return render('preview.xhtml', post=post)
 
     @require_login
@@ -253,7 +253,7 @@ class Root(object):
         allteam, sendnow = model.get_userteam_emails(loginid)
         if len(sendnow):
             mail.sendpost(email, allteam, sendnow,
-                          Post((loginid, today, now, completed, planned, tags)))
+                          Post((loginid, today, now, completed.decode("utf-8"), planned.decode("utf-8"), tags.decode("utf-8"))))
 
         raise cherrypy.HTTPRedirect(cherrypy.url('/'))
 
