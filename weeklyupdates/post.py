@@ -5,7 +5,7 @@ import markdown2
 import re
 
 link_patterns = (
-    (re.compile(r'(https?://.*?(?=[\s\]\)\|]|$))', re.I | re.MULTILINE), r'\1'),
+    (re.compile(r'(?<!")(https?://.*?(?=[\s\]\)\|]|$))', re.I | re.MULTILINE), r'\1'),
     (re.compile(r'bug[\s:#]+(\d{3,7})\b', re.I), r'https://bugzilla.mozilla.org/show_bug.cgi?id=\1'),
 )
 
