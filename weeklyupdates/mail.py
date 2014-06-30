@@ -7,7 +7,7 @@ def rendermail(template, subject, **kwargs):
     t = main.loader.load(template)
     htmlBody = t.generate(loginid=None, subject=subject, **kwargs)
     textBody = t.generate(loginid=None, subject=subject, **kwargs)
-    return htmlBody.render('html'), textBody.render('text')
+    return htmlBody.render('html'), textBody.render('text').strip()
 
 def sendmails(messages, fromaddress=None, recipientlist=None, app=None):
     if app is None:
