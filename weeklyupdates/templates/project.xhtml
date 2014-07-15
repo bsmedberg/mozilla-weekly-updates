@@ -10,7 +10,7 @@
           rel="alternate" title="All project posts"/>
   </head>
   <body class="2col">
-    <h1>Project: ${projectname}</h1>
+    <h1>Project: ${projectname} <a href="${genlink('project', projectname, 'feed')}" class="feedlink"/></h1>
 
     <div id="col1">
     ${postlist(posts)}
