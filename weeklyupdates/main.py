@@ -78,7 +78,7 @@ class Root(object):
 
             cur.execute('''SELECT userid FROM users
                            WHERE userid = ?''',
-                        (loginid))
+                        (loginid,))
             if cur.fetchone() is None:
                 cur.execute('''INSERT INTO users
                                (userid, email) VALUES (?, ?)''',
