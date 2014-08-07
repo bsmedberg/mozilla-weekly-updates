@@ -192,7 +192,7 @@ def get_postbugs(post):
                    WHERE bug.userid = ?
                      AND bug.postdate = ?
                      AND bug.bugid = titles.bugid''',
-      (post.userid, post.postdate))
+      (post.userid, post.postdate.toordinal()))
     post.populatebugs(cur.fetchall())
 
 def get_userprojects(userid):
