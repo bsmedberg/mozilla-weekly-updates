@@ -88,6 +88,12 @@ def get_projects():
     cur.execute('''SELECT projectname FROM projects ORDER BY projectname''')
     return [project for project, in cur.fetchall()]
 
+def get_user_projects(userid):
+    cur = get_cursor()
+    cur.execute('''SELECT projectname FROM userprojects WHERE userid = ?''',
+                (userid,))
+    return tuple(project for project, in cur.fetchall())
+
 def get_user_posts(userid):
     """
     Get the 10 most recent posts by this username, and get today's post if there is one today.

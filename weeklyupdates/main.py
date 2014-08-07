@@ -30,16 +30,18 @@ class Root(object):
         projects = model.get_projects()
 
         if loginid is None:
+            team = ()
             teamposts = None
             userposts = None
             todaypost = None
             recent = model.get_recentposts()
         else:
+            team = model.get_user_projects(loginid)
             teamposts = model.get_teamposts(loginid)
             userposts, todaypost = model.get_user_posts(loginid)
             recent = None
 
-        return render('index.xhtml', projects=projects, recent=recent,
+        return render('index.xhtml', projects=projects, recent=recent, team=team,
                       teamposts=teamposts, userposts=userposts, todaypost=todaypost)
 
     @model.requires_db
