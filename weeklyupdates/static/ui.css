@@ -171,6 +171,10 @@ img {
   background-color: #ECECEC;
 }
 
+.editpost .bugs {
+  margin-bottom: 2em;
+}
+
 textarea {
   border: 1px solid #CCC;
 

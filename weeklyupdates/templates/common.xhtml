@@ -104,15 +104,25 @@ import json
 	onsubmit="clearPreview()">
 
     <div class="fullwidth">
-      <div py:if="'firefox' in team">Show ${post.userid}’s bug status here!</div>
+      <div py:if="'firefox' in team" class="bugs">
+        <div><span py:if="not post.bugs">No bugs.</span><span
+        py:if="post.bugs">Current bugs you have committed to in this iteration.</span>
+          <py:for each="bug in post.bugs">
+            ${bug}<br/>
+          </py:for>
+        </div>
+      </div>
       <div class="right-note"><a href="${genlink('markup')}" target="markup">Markdown Details</a></div>
-      <h3>Done</h3>
+      <h3 py:if="'firefox' not in team">Done</h3><h3 py:if="'firefox' in
+      team">1. What did you do yesterday?</h3>
       <p><textarea id="completed" name="completed" class="fullwidth" rows="6">${post.completed}</textarea></p>
 
-      <h3>Next</h3>
+      <h3 py:if="'firefox' not in team">Next</h3><h3 py:if="'firefox' in
+      team">2. What will you do today?</h3>
       <p><textarea id="planned" name="planned" class="fullwidth" rows="6">${post.planned}</textarea></p>
 
-      <h3>Coordination</h3>
+      <h3 py:if="'firefox' not in team">Coordination</h3><h3 py:if="'firefox' in
+      team">3. Are you blocked on anything?  What?</h3>
       <p><textarea id="tags" name="tags" class="fullwidth" rows="3">${post.tags}</textarea></p>
 
       <input py:if="post.postdate is not None"
