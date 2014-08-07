@@ -105,6 +105,8 @@ def get_user_posts(userid):
                    WHERE userid = ?
                    ORDER BY postdate DESC, posttime DESC LIMIT 10''', (userid,))
     posts = [Post(r) for r in cur.fetchall()]
+    for post in posts:
+        get_postbugs(post)
     if not len(posts):
         posts.append(Post(None))
         thispost = Post(None)
@@ -123,7 +125,10 @@ def get_user_feedposts(userid):
                      AND postdate >= ?
                    ORDER BY postdate DESC, posttime DESC''',
                 (userid, util.today().toordinal() - 15))
-    return [Post(d) for d in cur.fetchall()]
+    posts = [Post(d) for d in cur.fetchall()]
+    for post in posts:
+        get_postbugs(post)
+    return posts
 
 def get_all_userposts(userid):
     cur = get_cursor()
@@ -131,7 +136,10 @@ def get_all_userposts(userid):
                    FROM posts
                    WHERE userid = ?
                    ORDER BY postdate DESC, posttime DESC''', (userid,))
-    return [Post(r) for r in cur.fetchall()]
+    posts = [Post(r) for r in cur.fetchall()]
+    for post in posts:
+        get_postbugs(post)
+    return posts
 
 def get_teamposts(userid):
     cur = get_cursor()
@@ -145,7 +153,10 @@ def get_teamposts(userid):
                                   AND u1.userid = posts.userid
                                   AND u2.userid = ?)
                      ORDER BY postdate DESC, posttime DESC''', (userid,))
-    return [Post(d) for d in cur.fetchall()]
+    posts = [Post(d) for d in cur.fetchall()]
+    for post in posts:
+        get_postbugs(post)
+    return posts
 
 def get_feedposts():
     cur = get_cursor()
@@ -154,7 +165,10 @@ def get_feedposts():
                    WHERE postdate > ?
                    ORDER BY postdate DESC, posttime DESC''',
                 (util.today().toordinal() - 15,))
-    return [Post(d) for d in cur.fetchall()]
+    posts = [Post(d) for d in cur.fetchall()]
+    for post in posts:
+        get_postbugs(post)
+    return posts
 
 def get_recentposts():
     cur = get_cursor()
@@ -166,7 +180,10 @@ def get_recentposts():
                      AND postdate > ?
                    ORDER BY postdate DESC, posttime DESC''',
                 (util.today().toordinal() - 15,))
-    return [Post(d) for d in cur.fetchall()]
+    posts = [Post(d) for d in cur.fetchall()]
+    for post in posts:
+        get_postbugs(post)
+    return posts
 
 def get_postbugs(post):
     cur = get_cursor()
@@ -242,7 +259,10 @@ def get_project_posts(projectname):
                                  WHERE userprojects.userid = posts.userid
                                  AND userprojects.projectname = ?)
                    ORDER BY postdate DESC, posttime DESC''', (projectname,))
-    return [Post(d) for d in cur.fetchall()]
+    posts = [Post(d) for d in cur.fetchall()]
+    for post in posts:
+        get_postbugs(post)
+    return posts
 
 def get_naglist(cur):
     cur.execute('''SELECT users.userid, IFNULL(email, users.userid), MAX(postdate) AS lastpostdate
@@ -268,7 +288,10 @@ def iter_daily(cur, day):
                                     AND u2.userid = ?)
                        ORDER BY postdate ASC, posttime ASC''',
                     (day.toordinal(), userid))
-        yield userid, email, [Post(r) for r in cur.fetchall()]
+        posts = [Post(r) for r in cur.fetchall()]
+        for post in posts:
+            get_postbugs(post)
+        yield userid, email, posts
 
 def iter_weekly(cur, start, end):
     cur.execute('''SELECT userid, IFNULL(email, userid)
@@ -284,4 +307,7 @@ def iter_weekly(cur, start, end):
                                     AND u2.userid = ?)
                        ORDER BY postdate ASC, posttime ASC''',
                     (start.toordinal(), end.toordinal(), userid))
-        yield userid, email, [Post(r) for r in cur.fetchall()]
+        posts = [Post(r) for r in cur.fetchall()]
+        for post in posts:
+            get_postbugs(post)
+        yield userid, email, posts
