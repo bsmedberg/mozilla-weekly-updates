@@ -34,3 +34,23 @@ CREATE TABLE IF NOT EXISTS posts
   CONSTRAINT posts_pkey PRIMARY KEY (userid, postdate),
   CONSTRAINT posts_userid_fkey FOREIGN KEY (userid) REFERENCES users (userid)
 ) ENGINE=InnoDB;
+
+CREATE TABLE IF NOT EXISTS bugs
+(
+  bugid INTEGER NOT NULL,
+  userid VARCHAR(80) NOT NULL,
+  postdate INTEGER NOT NULL,
+  status TINYINT NULL,
+  CONSTRAINT bugs_pkey PRIMARY KEY (bugid, postdate),
+  CONSTRAINT bugs_userid_fkey FOREIGN KEY (userid) REFERENCES posts (userid)
+  -- CONSTRAINT bugs_bugid_fkey FOREIGN KEY (bugid) REFERENCES bugtitles (bugid)
+  -- CONSTRAINT bugs_postdate_fkey FOREIGN KEY (postdate) REFERENCES posts (postdate)
+) ENGINE=InnoDB;
+
+CREATE TABLE IF NOT EXISTS bugtitles
+(
+  bugid INTEGER NOT NULL,
+  title TEXT,
+  CONSTRAINT bugtitles_pkey PRIMARY KEY (bugid),
+  CONSTRAINT bugtitles_bugid_fkey FOREIGN KEY (bugid) REFERENCES bugs (bugid)
+) ENGINE=InnoDB;

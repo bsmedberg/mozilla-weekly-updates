@@ -22,12 +22,17 @@ class Post(object):
     completed = None
     planned = None
     tags = None
+    bugs = None
 
     def __init__(self, record):
         if record is not None:
             self.userid, self.postdate, self.posttime, self.completed, self.planned, self.tags = record
             self.postdate = datetime.date.fromordinal(self.postdate)
             self.posttime = datetime.datetime.fromtimestamp(self.posttime)
+
+    def populatebugs(self, bugs):
+        if bugs is not None:
+            self.bugs = bugs
 
     def getcompleted(self):
         if self.completed is None:

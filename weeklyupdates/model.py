@@ -162,6 +162,16 @@ def get_recentposts():
                 (util.today().toordinal() - 15,))
     return [Post(d) for d in cur.fetchall()]
 
+def get_postbugs(post):
+    cur = get_cursor()
+    cur.execute('''SELECT titles.title, bug.bugid, bug.status
+                   FROM bugtitles AS titles, bugs AS bug
+                   WHERE bug.userid = ?
+                     AND bug.postdate = ?
+                     AND bug.bugid = titles.bugid''',
+      (post.userid, post.postdate))
+    post.populatebugs(cur.fetchall())
+
 def get_userprojects(userid):
     cur = get_cursor()
     cur.execute('''SELECT projectname
