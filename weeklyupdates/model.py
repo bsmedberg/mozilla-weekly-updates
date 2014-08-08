@@ -1,6 +1,8 @@
 import threading
 import cherrypy
 import datetime
+import json
+import requests
 import util
 from post import Post
 
@@ -311,3 +313,25 @@ def iter_weekly(cur, start, end):
         for post in posts:
             get_postbugs(post)
         yield userid, email, posts
+
+def get_bugmail(userid):
+    return userid
+
+def get_currentbugs(userid):
+    # https://api-dev.bugzilla.mozilla.org/latest/bug?include_fields=id,assigned_to,summary,cf_fx_iteration,cf_fx_points&status=ASSIGNED&status=NEW&status=REOPENED&assigned_to=<bugmail from userid>
+    baseUrl = 'https://api-dev.bugzilla.mozilla.org/latest/bug'
+    params = {
+        'include_fields': 'id,assigned_to,summary,cf_fx_iteration,cf_fx_points',
+        'status':['ASSIGNED','NEW','REOPENED'],
+        'assigned_to': get_bugmail(userid)
+    }
+    r = requests.get(baseUrl, params=params)
+    bugs = []
+    import sys; print >> sys.stderr, r.url
+    if (r.status_code == 200):
+        try:
+            bugs = json.loads(r.text)['bugs']
+            bugs = filter(lambda (bug): bug['cf_fx_iteration'] != '---', bugs)
+        except:
+            pass
+    return bugs

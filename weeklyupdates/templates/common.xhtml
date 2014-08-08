@@ -105,11 +105,15 @@ import json
 
     <div class="fullwidth">
       <div py:if="'firefox' in team" class="bugs">
-        <div><span py:if="not post.bugs">No bugs.</span><span
-        py:if="post.bugs">Current bugs you have committed to in this iteration.</span>
-          <py:for each="bug in post.bugs">
-            ${bug}<br/>
+        <div>
+          <div class="header none" py:if="not bugs">No bugs.</div>
+          <div class="header" py:if="bugs" >Current bugs you have committed to in this iteration.</div>
+          <div>${post.bugs}</div>
+          <ul>
+          <py:for each="bug in bugs">
+            <li>Bug ${bug.id} - ${bug.summary} ${bug.cf_fx_iteration}/${bug.cf_fx_points}</li>
           </py:for>
+          </ul>
         </div>
       </div>
       <div class="right-note"><a href="${genlink('markup')}" target="markup">Markdown Details</a></div>

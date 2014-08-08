@@ -34,14 +34,16 @@ class Root(object):
             teamposts = None
             userposts = None
             todaypost = None
+            bugs = None
             recent = model.get_recentposts()
         else:
             team = model.get_user_projects(loginid)
             teamposts = model.get_teamposts(loginid)
             userposts, todaypost = model.get_user_posts(loginid)
+            bugs = model.get_currentbugs(loginid)
             recent = None
 
-        return render('index.xhtml', projects=projects, recent=recent, team=team,
+        return render('index.xhtml', projects=projects, recent=recent, team=team, bugs=bugs,
                       teamposts=teamposts, userposts=userposts, todaypost=todaypost)
 
     @model.requires_db
