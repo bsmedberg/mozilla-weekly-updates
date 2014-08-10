@@ -1,4 +1,5 @@
 import threading
+import bugmail
 import cherrypy
 import datetime
 import json
@@ -315,7 +316,7 @@ def iter_weekly(cur, start, end):
         yield userid, email, posts
 
 def get_bugmail(userid):
-    return userid
+    return bugmail.addresses.get(userid, userid)
 
 def get_currentbugs(userid):
     # https://api-dev.bugzilla.mozilla.org/latest/bug?include_fields=id,assigned_to,summary,cf_fx_iteration,cf_fx_points&status=ASSIGNED&status=NEW&status=REOPENED&assigned_to=<bugmail from userid>
