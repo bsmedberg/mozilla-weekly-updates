@@ -171,8 +171,36 @@ img {
   background-color: #ECECEC;
 }
 
+.editpost .bugs .summary {
+  color: #666666;
+  font-size: 14px;
+}
+
+.editpost .bugs .header {
+  color: #333333;
+}
+
 .editpost .bugs {
   margin-bottom: 2em;
+}
+
+.editpost .bugs ul {
+  list-style: none;
+  padding-left: 0px;
+  font-size: 12px;
+  margin: 0px;
+}
+
+.editpost .bugs li {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: nowrap;
+}
+
+.editpost .bug {
+  margin-top: auto;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 textarea {
