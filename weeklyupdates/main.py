@@ -1,6 +1,7 @@
 import cherrypy, os
 import MySQLdb
 from genshi.template import TemplateLoader
+import re
 import util
 from auth import require_login, logged_in, logged_out
 from post import Post
@@ -218,8 +219,16 @@ class Root(object):
 
     @require_login
     @model.requires_db
-    def post(self, completed, planned, tags, isedit=False):
+    def post(self, completed, planned, tags, isedit=False, **kwargs):
         loginid = cherrypy.request.loginid
+        # kwargs will contain {"bugNNNNN": "newstatus", "bugMMMMMM": "otherstatus"}
+        for key, value in kwargs.iteritems():
+            bugKey = re.match("^bug(\d+)$", key)
+            if not bugKey:
+                continue
+            bugId = bugKey.group(1)
+            # bugId is the bug id as a string.
+            # value is "notstarted", "inprogress", or "inreview"
 
         assert cherrypy.request.method.upper() == 'POST'
 
