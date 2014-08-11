@@ -106,6 +106,7 @@ import json
     <div class="fullwidth">
       <div py:if="'firefox' in team" class="bugs">
         <div>
+          <div class="header">${daysLeft} days remaining in iteration ${iteration}.</div>
           <div class="header none" py:if="not bugs">No bugs.</div>
           <div class="header" py:if="bugs" >Current bugs you have committed to in this iteration.</div>
           <div>${post.bugs}</div>

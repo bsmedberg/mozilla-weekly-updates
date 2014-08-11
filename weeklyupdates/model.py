@@ -321,8 +321,12 @@ def get_bugmail(userid):
         rv = [userid, rv]
     return rv
 
-def get_currentbugs(userid):
-    # https://api-dev.bugzilla.mozilla.org/latest/bug?include_fields=id,assigned_to,summary,cf_fx_iteration,cf_fx_points&status=ASSIGNED&status=NEW&status=REOPENED&assigned_to=<bugmail from userid>
+def get_currentIteration():
+    iteration = "34.2"
+    daysLeft = 3
+    return (iteration, daysLeft)
+
+def get_currentbugs(userid, iteration):
     baseUrl = 'https://api-dev.bugzilla.mozilla.org/latest/bug'
     params = {
         'include_fields': 'id,assigned_to,summary,cf_fx_iteration,cf_fx_points',
@@ -335,7 +339,7 @@ def get_currentbugs(userid):
     if (r.status_code == 200):
         try:
             bugs = json.loads(r.text)['bugs']
-            bugs = filter(lambda (bug): bug['cf_fx_iteration'] != '---', bugs)
+            bugs = filter(lambda (bug): bug['cf_fx_iteration'] == iteration, bugs)
         except:
             pass
     return bugs

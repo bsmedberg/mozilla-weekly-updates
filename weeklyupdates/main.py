@@ -28,6 +28,7 @@ class Root(object):
         loginid = cherrypy.request.loginid
 
         projects = model.get_projects()
+        iteration, daysLeft = model.get_currentIteration()
 
         if loginid is None:
             team = ()
@@ -40,11 +41,12 @@ class Root(object):
             team = model.get_user_projects(loginid)
             teamposts = model.get_teamposts(loginid)
             userposts, todaypost = model.get_user_posts(loginid)
-            bugs = model.get_currentbugs(loginid)
+            bugs = model.get_currentbugs(loginid, iteration)
             recent = None
 
         return render('index.xhtml', projects=projects, recent=recent, team=team, bugs=bugs,
-                      teamposts=teamposts, userposts=userposts, todaypost=todaypost)
+                      iteration=iteration, daysLeft=daysLeft, teamposts=teamposts, userposts=userposts,
+                      todaypost=todaypost)
 
     @model.requires_db
     def posts(self):
