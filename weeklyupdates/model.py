@@ -3,6 +3,7 @@ import bugmail
 import cherrypy
 import datetime
 import json
+import re
 import requests
 import util
 from post import Post
@@ -321,10 +322,25 @@ def get_bugmail(userid):
         rv = [userid, rv]
     return rv
 
+iterationRe = re.compile("<li> <b>Iteration ([0-9\.]+):</b>  ([^<]+)</li>")
+
 def get_currentIteration():
-    iteration = "34.2"
-    daysLeft = 3
-    return (iteration, daysLeft)
+    baseUrl = 'https://wiki.mozilla.org/Firefox/IterativeDevelopment/IterationSchedule'
+    r = requests.get(baseUrl)
+    currentIteration = "1.0"
+    daysLeft = 0
+    strptime = datetime.datetime.strptime
+    today = datetime.date.today()
+    thisYear = str(today.year)
+    if (r.status_code == 200):
+        iterations = [(value.strip(), date.strip()) for value,date in iterationRe.findall(r.text)]
+        for i in iterations:
+            iteration = i[0]
+            start, end = (strptime(y + " " + thisYear, "%A %B %d %Y").date() for y in i[1].split(' - '))
+            if start <= today <= end:
+                currentIteration = iteration
+                daysLeft = (end - today).days
+    return (currentIteration, daysLeft)
 
 def get_currentbugs(userid, iteration):
     baseUrl = 'https://api-dev.bugzilla.mozilla.org/latest/bug'
@@ -335,7 +351,6 @@ def get_currentbugs(userid, iteration):
     }
     r = requests.get(baseUrl, params=params)
     bugs = []
-    import sys; print >> sys.stderr, r.url
     if (r.status_code == 200):
         try:
             bugs = json.loads(r.text)['bugs']
