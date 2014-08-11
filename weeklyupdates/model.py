@@ -316,7 +316,10 @@ def iter_weekly(cur, start, end):
         yield userid, email, posts
 
 def get_bugmail(userid):
-    return bugmail.addresses.get(userid, userid)
+    rv = bugmail.addresses.get(userid, userid)
+    if (rv != userid):
+        rv = [userid, rv]
+    return rv
 
 def get_currentbugs(userid):
     # https://api-dev.bugzilla.mozilla.org/latest/bug?include_fields=id,assigned_to,summary,cf_fx_iteration,cf_fx_points&status=ASSIGNED&status=NEW&status=REOPENED&assigned_to=<bugmail from userid>
