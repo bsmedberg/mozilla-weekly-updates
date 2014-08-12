@@ -23,6 +23,13 @@ def renderatom(**kwargs):
                       feedtag=cherrypy.request.app.config['weeklyupdates']['feed.tag.domain'],
                       **kwargs).render('xml')
 
+bugstatuses = {
+  'unknown': 0,
+  'notstarted': 1,
+  'inprogress': 2,
+  'inreview': 3
+}
+
 class Root(object):
     @model.requires_db
     def index(self):
@@ -221,14 +228,6 @@ class Root(object):
     @model.requires_db
     def post(self, completed, planned, tags, isedit=False, **kwargs):
         loginid = cherrypy.request.loginid
-        # kwargs will contain {"bugNNNNN": "newstatus", "bugMMMMMM": "otherstatus"}
-        for key, value in kwargs.iteritems():
-            bugKey = re.match("^bug(\d+)$", key)
-            if not bugKey:
-                continue
-            bugId = bugKey.group(1)
-            # bugId is the bug id as a string.
-            # value is "notstarted", "inprogress", or "inreview"
 
         assert cherrypy.request.method.upper() == 'POST'
 
@@ -265,6 +264,12 @@ class Root(object):
                            VALUES (?, ?, ?, ?, ?, ?)''',
                         (loginid, today, now, completed, planned, tags))
 
+        # kwargs will contain {"bugNNNNN": "newstatus", "bugMMMMMM": "otherstatus"}
+        for key, value in kwargs.iteritems():
+            bugKey = re.match("^bug(\d+)$", key)
+            if not bugKey:
+                continue
+            model.save_bugstatus(cur, bugKey.group(1), loginid, today, bugstatuses.get(value, 0))
         allteam, sendnow = model.get_userteam_emails(loginid)
         if len(sendnow):
             mail.sendpost(email, allteam, sendnow,

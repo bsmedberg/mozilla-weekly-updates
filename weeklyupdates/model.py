@@ -342,6 +342,27 @@ def get_currentIteration():
                 daysLeft = (end - today).days
     return (currentIteration, daysLeft)
 
+def get_bugstatus(userid, postdate):
+    postdate = util.today().toordinal()
+    pass
+
+def save_bugstatus(cur, bugid, userid, postdate, status):
+    # bugid is the bug id as a string.
+    # status is "notstarted", "inprogress", or "inreview"
+    rows = cur.execute('''SELECT status FROM bugs WHERE bugid = ? AND userid = ? AND postdate = ?''',
+                       (bugid, userid, postdate))
+    if rows:
+      updated = cur.execute('''UPDATE bugs
+                               SET status = ?
+                               WHERE bugid = ? AND userid = ? AND postdate = ?''',
+                            (status, bugid, userid, postdate))
+    else:
+      updated = cur.execute('''INSERT INTO bugs
+                               (bugid, userid, postdate, status)
+                               VALUES (?, ?, ?, ?)''',
+                          (bugid, userid, postdate, status))
+
+
 def get_currentbugs(userid, iteration):
     baseUrl = 'https://api-dev.bugzilla.mozilla.org/latest/bug'
     params = {
@@ -357,4 +378,15 @@ def get_currentbugs(userid, iteration):
             bugs = filter(lambda (bug): bug['cf_fx_iteration'] == iteration, bugs)
         except:
             pass
+
+    cur = get_cursor()
+    for bug in bugs:
+      rows = cur.execute('''SELECT title FROM bugtitles WHERE bugid = ?''',
+                         (bug['id'],))
+      if rows:
+        updated = cur.execute('''UPDATE bugtitles SET title = ? WHERE bugid = ?''',
+                            (bug['summary'], bug['id']))
+      else:
+        updated = cur.execute('''INSERT INTO bugtitles (bugid, title) VALUES (?, ?)''',
+                              (bug['id'], bug['summary']))
     return bugs
