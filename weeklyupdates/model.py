@@ -342,10 +342,6 @@ def get_currentIteration():
                 daysLeft = (end - today).days
     return (currentIteration, daysLeft)
 
-def get_bugstatus(userid, postdate):
-    postdate = util.today().toordinal()
-    pass
-
 def save_bugstatus(cur, bugid, userid, postdate, status):
     # bugid is the bug id as a string.
     # status is "notstarted", "inprogress", or "inreview"
@@ -361,6 +357,16 @@ def save_bugstatus(cur, bugid, userid, postdate, status):
                                (bugid, userid, postdate, status)
                                VALUES (?, ?, ?, ?)''',
                           (bugid, userid, postdate, status))
+
+def get_bugstatus(cur, userid, bugids):
+    cur.execute('''SELECT bugid,status FROM bugs WHERE userid = ? AND bugid in ?''',
+                (userid, bugids))
+
+    bugs = cur.fetchall()
+    rv = {}
+    for bug in bugs:
+        rv[str(bug[0])] = bug[1]
+    return rv
 
 
 def get_currentbugs(userid, iteration):
@@ -381,12 +387,15 @@ def get_currentbugs(userid, iteration):
 
     cur = get_cursor()
     for bug in bugs:
-      rows = cur.execute('''SELECT title FROM bugtitles WHERE bugid = ?''',
-                         (bug['id'],))
-      if rows:
-        updated = cur.execute('''UPDATE bugtitles SET title = ? WHERE bugid = ?''',
-                            (bug['summary'], bug['id']))
-      else:
-        updated = cur.execute('''INSERT INTO bugtitles (bugid, title) VALUES (?, ?)''',
-                              (bug['id'], bug['summary']))
+        rows = cur.execute('''SELECT title FROM bugtitles WHERE bugid = ?''',
+                           (bug['id'],))
+        if rows:
+            updated = cur.execute('''UPDATE bugtitles SET title = ? WHERE bugid = ?''',
+                                (bug['summary'], bug['id']))
+        else:
+            updated = cur.execute('''INSERT INTO bugtitles (bugid, title) VALUES (?, ?)''',
+                                  (bug['id'], bug['summary']))
+    statuses = get_bugstatus(cur, userid, [bug['id'] for bug in bugs])
+    for bug in bugs:
+        bug['status'] = statuses.get(bug['id'], 0)
     return bugs

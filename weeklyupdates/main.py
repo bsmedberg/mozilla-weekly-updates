@@ -29,6 +29,8 @@ bugstatuses = {
   'inprogress': 2,
   'inreview': 3
 }
+statusbugs = dict((v,k) for k, v in bugstatuses.iteritems())
+
 
 class Root(object):
     @model.requires_db
@@ -50,6 +52,11 @@ class Root(object):
             teamposts = model.get_teamposts(loginid)
             userposts, todaypost = model.get_user_posts(loginid)
             bugs = model.get_currentbugs(loginid, iteration)
+            for bug in bugs:
+                bug['status'] = statusbugs.get(bug.get('status', 0), 'unknown')
+                for key in bugstatuses.keys():
+                    bug[key] = None
+                bug[bug['status']] = "checked"
             recent = None
 
         return render('index.xhtml', projects=projects, recent=recent, team=team, bugs=bugs,
