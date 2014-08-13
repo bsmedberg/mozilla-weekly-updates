@@ -30,7 +30,14 @@
           <py:when test="None">New Status Report</py:when>
           <py:otherwise>Edit Today's Status</py:otherwise>
         </h2>
-        ${editpost(todaypost, team)}
+        <py:choose>
+	  <py:when test="'firefox' in team">
+	    ${editbugpost(todaypost)}
+	  </py:when>
+	  <py:otherwise>
+	    ${editpost(todaypost)}
+	  </py:otherwise>
+	</py:choose>
       </py:if>
 
       <h2>All Projects</h2>
