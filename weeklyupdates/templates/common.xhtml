@@ -154,7 +154,7 @@ import json
       <div class="right-note"><a href="${genlink('markup')}" target="markup">Markdown Details</a></div>
       <h3>1. What did you do yesterday?</h3>
       <p><textarea id="completed" name="completed" class="fullwidth" rows="${len(bugs)}"><py:choose
-        ><py:when test="post.completed">completed: ${post.completed}</py:when
+        ><py:when test="post.completed">${post.completed}</py:when
         ><py:otherwise>${"\n".join("Bug " + bug.id + " - " for bug in bugs)}</py:otherwise
       ></py:choose></textarea></p>
 
