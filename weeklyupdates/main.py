@@ -223,11 +223,12 @@ class Root(object):
         return render('me.xhtml', email=email, reminderday=reminderday,
                       sendemail=sendemail, projects=projects)
 
-    def preview(self, completed, planned, tags):
+    def preview(self, completed, planned, tags, **kwargs):
         assert cherrypy.request.method.upper() == 'POST'
 
         today = util.today().toordinal()
         now = util.now()
+        # import sys; print >> sys.stderr, kwargs
         post = Post(('<preview>', today, now, completed.decode("utf-8"), planned.decode("utf-8"), tags.decode("utf-8")))
         return render('preview.xhtml', post=post)
 
