@@ -359,6 +359,8 @@ def save_bugstatus(cur, bugid, userid, postdate, status):
                           (bugid, userid, postdate, status))
 
 def get_bugstatus(cur, userid, bugids):
+    if not len(bugids):
+      return {}
     cur.execute('''SELECT bugid,status FROM bugs WHERE userid = ? AND bugid in ?''',
                 (userid, bugids))
 
