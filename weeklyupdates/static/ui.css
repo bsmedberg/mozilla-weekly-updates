@@ -172,33 +172,43 @@ img {
   background-color: #ECECEC;
 }
 
-.editpost .bugs .summary {
+.bugpost {
+  margin: 1.5em auto;
+  background-color: #FFF0CE;
+}
+
+.bugs .summary {
   color: #666666;
   font-size: 14px;
   margin-bottom: 0.5em;
 }
 
-.editpost .bugs .header {
+.bugs .header {
   color: #333333;
 }
 
-.editpost .bugs ul {
+.bugs ul {
   list-style: none;
   padding-left: 0px;
   font-size: 12px;
   margin: 0px;
 }
 
-.editpost .bugs li {
+.bugs li {
   display: flex;
   justify-content: space-between;
   flex-wrap: nowrap;
 }
 
-.editpost .bug {
+.bug {
   margin-top: auto;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+.bugs input[type="button"],
+.bugs input[type="submit"] {
+  float: right;
 }
 
 textarea {
