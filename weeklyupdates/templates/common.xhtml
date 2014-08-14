@@ -140,7 +140,7 @@ import json
           <!-- div>${post.bugs}</div -->
           <ul>
           <py:for each="bug in bugs">
-            <li><div class="bug">Bug ${bug.id} - ${bug.summary} ${bug.cf_fx_points}</div>
+            <li><div class="bug">Bug ${bug.id} - ${bug.summary}</div>
               <div class="progress">
                 <input type="radio" name="bug${bug.id}" value="notstarted" checked="${bug.notstarted}">Not Started</input>
                 <input type="radio" name="bug${bug.id}" value="inprogress" checked="${bug.inprogress}">In Progress</input>
