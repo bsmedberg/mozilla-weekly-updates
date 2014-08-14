@@ -12,7 +12,10 @@
           type="application/atom+xml" rel="alternate" title="My Team Posts"/>
   </head>
   <body class="2col">
-    <div id="col1">
+    <py:if test="'firefox' in team">
+      ${editbugpost(todaypost)}
+    </py:if>
+    <div class="col1">
       <py:if test="loginid is None">
         <h2>Login</h2>
         ${loginform()}
@@ -30,14 +33,9 @@
           <py:when test="None">New Status Report</py:when>
           <py:otherwise>Edit Today's Status</py:otherwise>
         </h2>
-        <py:choose>
-	  <py:when test="'firefox' in team">
-	    ${editbugpost(todaypost)}
-	  </py:when>
-	  <py:otherwise>
-	    ${editpost(todaypost)}
-	  </py:otherwise>
-	</py:choose>
+        <py:if test="not 'firefox' in team">
+          ${editpost(todaypost)}
+        </py:if>
       </py:if>
 
       <h2>All Projects</h2>
@@ -52,7 +50,7 @@
         <input type="submit" value="Create Project"/>
       </form>
     </div>
-    <div id="col2">
+    <div class="col2">
       <py:if test="loginid is not None">
         <h2><a href="${genlink('user', loginid, 'teamposts')}">Your Team Posts</a>
           <a href="${genlink('user', loginid, 'teamposts', 'feed')}" class="feedlink"/>

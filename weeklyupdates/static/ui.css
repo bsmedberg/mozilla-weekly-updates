@@ -40,13 +40,13 @@ body {
     -webkit-column-gap: 1em;
   }
 
-  #col1 {
+  .col1 {
     float: left;
     width: 50%;
     padding-right: 0.5em;
   }
 
-  #col2 {
+  .col2 {
     padding-left: 0.5em;
     display: inline-block;
     width: 50%;
@@ -105,6 +105,7 @@ p {
 
 .fullwidth {
   width: 100%;
+  max-width: 100%;
 }
 
 .keeptogether {
@@ -174,14 +175,11 @@ img {
 .editpost .bugs .summary {
   color: #666666;
   font-size: 14px;
+  margin-bottom: 0.5em;
 }
 
 .editpost .bugs .header {
   color: #333333;
-}
-
-.editpost .bugs {
-  margin-bottom: 2em;
 }
 
 .editpost .bugs ul {
