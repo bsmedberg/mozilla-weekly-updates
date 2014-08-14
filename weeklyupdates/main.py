@@ -29,6 +29,12 @@ bugstatuses = {
   'inprogress': 2,
   'inreview': 3
 }
+statusbugtext = {
+  0: 'Unknown',
+  1: 'Not Started',
+  2: 'In Progress',
+  3: 'In Review'
+}
 statusbugs = dict((v,k) for k, v in bugstatuses.iteritems())
 
 
@@ -53,6 +59,7 @@ class Root(object):
             userposts, todaypost = model.get_user_posts(loginid)
             bugs = model.get_currentbugs(loginid, iteration)
             for bug in bugs:
+                bug['statusText'] = statusbugtext.get(bug.get('status', 0), 'Unknown')
                 bug['status'] = statusbugs.get(bug.get('status', 0), 'unknown')
                 for key in bugstatuses.keys():
                     bug[key] = None
@@ -66,7 +73,7 @@ class Root(object):
     @model.requires_db
     def posts(self):
         recent = model.get_recentposts()
-        return render('posts.xhtml', recent=recent)
+        return render('posts.xhtml', recent=recent, bugs=None)
 
     @model.requires_db
     def feed(self):
@@ -129,7 +136,7 @@ class Root(object):
         teamposts = model.get_teamposts(userid)
 
         return render('user.xhtml', userid=userid, projects=projects,
-                      teamposts=teamposts, userposts=userposts)
+                      teamposts=teamposts, userposts=userposts, bugs=None)
 
     @model.requires_db
     def userposts(self, userid):
@@ -137,7 +144,7 @@ class Root(object):
         if not len(posts):
             raise cherrypy.HTTPError(404, "No posts found")
 
-        return render('userposts.xhtml', userid=userid, posts=posts)
+        return render('userposts.xhtml', userid=userid, posts=posts, bugs=None)
 
     @model.requires_db
     def userpostsfeed(self, userid):
@@ -153,7 +160,7 @@ class Root(object):
         team = model.get_userteam(userid)
 
         return render('teamposts.xhtml', userid=userid,
-                      teamposts=teamposts, team=team)
+                      teamposts=teamposts, team=team, bugs=None)
 
     @model.requires_db
     def userteampostsfeed(self, userid):
@@ -229,8 +236,10 @@ class Root(object):
         today = util.today().toordinal()
         now = util.now()
         # import sys; print >> sys.stderr, kwargs
+	# Modify kwargs to populate bugs!
+	# [ {summary: 'YYY', id: NNN, statusText: 'YYY'}, ...]
         post = Post(('<preview>', today, now, completed.decode("utf-8"), planned.decode("utf-8"), tags.decode("utf-8")))
-        return render('preview.xhtml', post=post)
+        return render('preview.xhtml', post=post, bugs=None)
 
     @require_login
     @model.requires_db
@@ -319,7 +328,7 @@ class Root(object):
         late = model.get_project_late(projectname)
 
         return render('project.xhtml', projectname=projectname, users=users,
-                      posts=posts, late=late)
+                      posts=posts, late=late, bugs=None)
 
     @model.requires_db
     def projectfeed(self, projectname):
