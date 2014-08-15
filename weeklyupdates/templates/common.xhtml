@@ -142,26 +142,7 @@ import json
 
     <div class="fullwidth bugs">
       <div class="summary">${daysLeft} days remaining in iteration ${iteration}.</div>
-      <div class="status col1">
-        <div class="bordered">
-          <div class="right-note"><a href="${genlink('markup')}" target="markup">Markdown Details</a></div>
-          <h3>1. What did you do yesterday?</h3>
-          <p><textarea id="completed" name="completed" class="fullwidth" rows="${len(bugs)}"><py:choose
-            ><py:when test="post.completed">${post.completed}</py:when
-            ><py:otherwise>${"\n".join("Bug " + bug.id + " - " for bug in bugs)}</py:otherwise
-          ></py:choose></textarea></p>
-
-          <h3>2. What will you do today?</h3>
-          <p><textarea id="planned" name="planned" class="fullwidth" rows="1">${post.planned}</textarea></p>
-
-          <h3>3. Are you blocked on anything?  What?</h3>
-          <p><textarea id="tags" name="tags" class="fullwidth" rows="1">${post.tags}</textarea></p>
-
-          <input py:if="post.postdate is not None"
-                 type="hidden" name="isedit" value="1"/>
-        </div>
-      </div>
-      <div class="col2">
+      <div class="col1">
         <div class="bordered">
           <div class="header none" py:if="not bugs">No bugs.</div>
           <h3 class="header" py:if="bugs" >Current bugs you have committed to in
@@ -181,6 +162,26 @@ import json
           </ul>
         </div>
       </div>
+      <div class="status col2">
+        <div class="bordered">
+          <div class="right-note"><a href="${genlink('markup')}" target="markup">Markdown Details</a></div>
+          <h3>1. What did you do yesterday?</h3>
+          <p><textarea id="completed" name="completed" class="fullwidth" rows="${len(bugs)}"><py:choose
+            ><py:when test="post.completed">${post.completed}</py:when
+            ><py:otherwise>${"\n".join("Bug " + bug.id + " - " for bug in bugs)}</py:otherwise
+          ></py:choose></textarea></p>
+
+          <h3>2. What will you do today?</h3>
+          <p><textarea id="planned" name="planned" class="fullwidth" rows="1">${post.planned}</textarea></p>
+
+          <h3>3. Are you blocked on anything?  What?</h3>
+          <p><textarea id="tags" name="tags" class="fullwidth" rows="1">${post.tags}</textarea></p>
+
+          <input py:if="post.postdate is not None"
+                 type="hidden" name="isedit" value="1"/>
+        </div>
+      </div>
+
       <br clear="both"/>
       <input type="submit" value="Submit"/>
       <input type="button" value="Preview" onclick="doPreview()"/>
