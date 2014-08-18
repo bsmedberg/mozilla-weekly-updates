@@ -74,7 +74,7 @@ import json
 
         <div class="postdata">
           <div class="newlines" py:if="post.bugs">
-            <h4 class="posthead">Unfinished Bugs:</h4>
+            <h4 class="posthead">Bugs:</h4>
             <p><py:for each="bug in post.bugs">
               <a title="${bug.summary}" href="https://bugzilla.mozilla.org/show_bug.cgi?id=${bug.id}"
                 >Bug ${bug.id}</a> - ${bug.statusText}
@@ -152,9 +152,12 @@ import json
             <li><div class="bug"><a href="https://bugzilla.mozilla.org/show_bug.cgi?id=${bug.id}"
               >Bug ${bug.id}</a> - ${bug.summary}</div>
               <div class="progress">
-                <input type="radio" name="bug${bug.id}" value="notstarted" checked="${bug.notstarted}">Not Started</input>
-                <input type="radio" name="bug${bug.id}" value="inprogress" checked="${bug.inprogress}">In Progress</input>
-                <input type="radio" name="bug${bug.id}" value="inreview" checked="${bug.inreview}">In Review</input>
+                <input type="radio" name="bug${bug.id}" value="notstarted"
+                  checked="${bug.notstarted}">Not Started</input>
+                <input type="radio" name="bug${bug.id}" value="inprogress"
+                  checked="${bug.inprogress}">In Progress</input>
+                <input type="radio" name="bug${bug.id}" value="inreview"
+                  checked="${bug.inreview}">In Review</input>
               </div>
             </li>
           </py:for>
@@ -165,16 +168,19 @@ import json
         <div class="bordered">
           <div class="right-note"><a href="${genlink('markup')}" target="markup">Markdown Details</a></div>
           <h3>1. What did you do yesterday?</h3>
-          <p><textarea id="completed" name="completed" class="fullwidth" rows="${len(bugs)}"><py:choose
+          <p><textarea id="completed" name="completed" class="fullwidth"
+            rows="${post.completed and post.completed.count('\n') + 1 or len(bugs)}"><py:choose
             ><py:when test="post.completed">${post.completed}</py:when
             ><py:otherwise>${"\n".join("Bug " + bug.id + " - " for bug in bugs)}</py:otherwise
           ></py:choose></textarea></p>
 
           <h3>2. What will you do today?</h3>
-          <p><textarea id="planned" name="planned" class="fullwidth" rows="1">${post.planned}</textarea></p>
+          <p><textarea id="planned" name="planned" class="fullwidth"
+            rows="${post.planned and post.planned.count('\n') + 1 or 1}">${post.planned}</textarea></p>
 
           <h3>3. Are you blocked on anything?  What?</h3>
-          <p><textarea id="tags" name="tags" class="fullwidth" rows="1">${post.tags}</textarea></p>
+          <p><textarea id="tags" name="tags" class="fullwidth"
+            rows="${post.tags and post.tags.count('\n') + 1 or 1}">${post.tags}</textarea></p>
 
           <input py:if="post.postdate is not None"
                  type="hidden" name="isedit" value="1"/>
