@@ -189,6 +189,20 @@ def get_recentposts():
         get_postbugs(post)
     return posts
 
+bugstatuses = {
+  'unknown': 0,
+  'notstarted': 1,
+  'inprogress': 2,
+  'inreview': 3
+}
+statusbugtext = {
+  0: 'Unknown',
+  1: 'Not Started',
+  2: 'In Progress',
+  3: 'In Review'
+}
+statusbugs = dict((v,k) for k, v in bugstatuses.iteritems())
+
 def get_postbugs(post):
     cur = get_cursor()
     cur.execute('''SELECT titles.title, bug.bugid, bug.status
@@ -197,7 +211,16 @@ def get_postbugs(post):
                      AND bug.postdate = ?
                      AND bug.bugid = titles.bugid''',
       (post.userid, post.postdate.toordinal()))
-    post.populatebugs(cur.fetchall())
+    bugs = [{'summary':summary, 'id':bugid, 'status':status}
+      for (summary, bugid, status) in cur.fetchall()]
+    for bug in bugs:
+        bug['statusText'] = statusbugtext.get(bug.get('status', 0), 'Unknown')
+        bug['status'] = statusbugs.get(bug.get('status', 0), 'unknown')
+        for key in bugstatuses.keys():
+            bug[key] = None
+        bug[bug['status']] = "checked"
+    post.populatebugs(bugs)
+
 
 def get_userprojects(userid):
     cur = get_cursor()
@@ -339,12 +362,13 @@ def get_currentIteration():
             start, end = (strptime(y + " " + thisYear, "%A %B %d %Y").date() for y in i[1].split(' - '))
             if start <= today <= end:
                 currentIteration = iteration
-                daysLeft = (end - today).days
+                daysLeft = (end - today).days + 1 # We can work on the last day.
     return (currentIteration, daysLeft)
 
-def save_bugstatus(cur, bugid, userid, postdate, status):
+def save_bugstatus(cur, bugid, userid, postdate, value):
     # bugid is the bug id as a string.
     # status is "notstarted", "inprogress", or "inreview"
+    status = bugstatuses.get(value, 0)
     rows = cur.execute('''SELECT status FROM bugs WHERE bugid = ? AND userid = ? AND postdate = ?''',
                        (bugid, userid, postdate))
     if rows:
@@ -400,4 +424,9 @@ def get_currentbugs(userid, iteration):
     statuses = get_bugstatus(cur, userid, [bug['id'] for bug in bugs])
     for bug in bugs:
         bug['status'] = statuses.get(bug['id'], 0)
+        bug['statusText'] = statusbugtext.get(bug.get('status', 0), 'Unknown')
+        bug['status'] = statusbugs.get(bug.get('status', 0), 'unknown')
+        for key in bugstatuses.keys():
+            bug[key] = None
+        bug[bug['status']] = "checked"
     return bugs

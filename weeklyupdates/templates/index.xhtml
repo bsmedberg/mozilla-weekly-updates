@@ -29,11 +29,11 @@
         </h2>
         ${postdetail(userposts[0], showuser=False, showdate=False)}
 
-        <h2 py:choose="todaypost.postdate">
-          <py:when test="None">New Status Report</py:when>
-          <py:otherwise>Edit Today's Status</py:otherwise>
-        </h2>
         <py:if test="not 'firefox' in team">
+          <h2 py:choose="todaypost.postdate">
+            <py:when test="None">New Status Report</py:when>
+            <py:otherwise>Edit Today's Status</py:otherwise>
+          </h2>
           ${editpost(todaypost)}
         </py:if>
       </py:if>

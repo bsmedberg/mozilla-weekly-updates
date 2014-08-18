@@ -73,10 +73,9 @@ import json
         <h3 py:if="showuser" class="postuser"><a href="${genlink('user', post.userid)}">${post.userid}</a></h3>
 
         <div class="postdata">
-
-          <div class="newlines" py:if="bugs">
-            <h4 class="posthead">Bugs:</h4>
-            <p><py:for each="bug in bugs">
+          <div class="newlines" py:if="post.bugs">
+            <h4 class="posthead">Unfinished Bugs:</h4>
+            <p><py:for each="bug in post.bugs">
               <a title="${bug.summary}" href="https://bugzilla.mozilla.org/show_bug.cgi?id=${bug.id}"
                 >Bug ${bug.id}</a> - ${bug.statusText}
             </py:for></p>
@@ -141,13 +140,13 @@ import json
 	onsubmit="clearPreview()">
 
     <div class="fullwidth bugs">
-      <div class="summary">${daysLeft} days remaining in iteration ${iteration}.</div>
+      <div class="summary">${daysLeft} ${'day' if daysLeft==1 else 'day'}
+        remaining in iteration ${iteration}.</div>
       <div class="col1">
         <div class="bordered">
           <div class="header none" py:if="not bugs">No bugs.</div>
           <h3 class="header" py:if="bugs" >Current bugs you have committed to in
           this iteration.</h3>
-          <!-- div>${post.bugs}</div -->
           <ul>
           <py:for each="bug in bugs">
             <li><div class="bug"><a href="https://bugzilla.mozilla.org/show_bug.cgi?id=${bug.id}"

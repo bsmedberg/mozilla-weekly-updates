@@ -23,21 +23,6 @@ def renderatom(**kwargs):
                       feedtag=cherrypy.request.app.config['weeklyupdates']['feed.tag.domain'],
                       **kwargs).render('xml')
 
-bugstatuses = {
-  'unknown': 0,
-  'notstarted': 1,
-  'inprogress': 2,
-  'inreview': 3
-}
-statusbugtext = {
-  0: 'Unknown',
-  1: 'Not Started',
-  2: 'In Progress',
-  3: 'In Review'
-}
-statusbugs = dict((v,k) for k, v in bugstatuses.iteritems())
-
-
 class Root(object):
     @model.requires_db
     def index(self):
@@ -58,12 +43,6 @@ class Root(object):
             teamposts = model.get_teamposts(loginid)
             userposts, todaypost = model.get_user_posts(loginid)
             bugs = model.get_currentbugs(loginid, iteration)
-            for bug in bugs:
-                bug['statusText'] = statusbugtext.get(bug.get('status', 0), 'Unknown')
-                bug['status'] = statusbugs.get(bug.get('status', 0), 'unknown')
-                for key in bugstatuses.keys():
-                    bug[key] = None
-                bug[bug['status']] = "checked"
             recent = None
 
         return render('index.xhtml', projects=projects, recent=recent, team=team, bugs=bugs,
@@ -286,7 +265,7 @@ class Root(object):
             bugKey = re.match("^bug(\d+)$", key)
             if not bugKey:
                 continue
-            model.save_bugstatus(cur, bugKey.group(1), loginid, today, bugstatuses.get(value, 0))
+            model.save_bugstatus(cur, bugKey.group(1), loginid, today, value)
         allteam, sendnow = model.get_userteam_emails(loginid)
         if len(sendnow):
             mail.sendpost(email, allteam, sendnow,
