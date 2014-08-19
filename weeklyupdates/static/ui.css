@@ -134,6 +134,14 @@ ol.bordered > li {
   margin: 0;
 }
 
+.avatar {
+  height: 40px;
+  width: 40px;
+  border-radius: 50%;
+  margin-right: 10px;
+  vertical-align: middle;
+}
+
 .postdata {
   margin-left: 0.5em;
 }

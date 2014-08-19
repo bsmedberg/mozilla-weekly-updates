@@ -70,7 +70,8 @@ import json
       <py:otherwise>
         <p py:if="showdate" class="postdate" title="Posted on ${post.postdate.isoformat()}">
           Posted ${human.date(post.postdate, asdays=True)}</p>
-        <h3 py:if="showuser" class="postuser"><a href="${genlink('user', post.userid)}">${post.userid}</a></h3>
+        <h3 py:if="showuser" class="postuser"><a href="${genlink('user', post.userid)}"
+          ><img class="avatar" src="https://avatars.io/email/${post.userid}" />${post.userid}</a></h3>
 
         <div class="postdata">
           <div class="newlines" py:if="post.bugs">
