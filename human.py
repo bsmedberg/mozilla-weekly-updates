@@ -26,6 +26,8 @@ def date(time=False, asdays=False, short=False):
 
     if type(time) is int:   time = datetime.fromtimestamp(time)
     elif not time:          time = now
+    elif asdays and type(time) is not datetime:
+        time = datetime.combine(time, datetime.min.time())
 
     # test naivety
     try:

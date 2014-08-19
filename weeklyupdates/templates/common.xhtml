@@ -3,6 +3,7 @@
 from weeklyupdates.util import feeddate
 from urllib import quote, urlencode
 import cherrypy
+import human
 import json
 ?>
 <div xmlns="http://www.w3.org/1999/xhtml"
@@ -67,9 +68,8 @@ import json
         <p>No status posted</p>
       </py:when>
       <py:otherwise>
-        <p py:if="showdate" class="postdate">
-          Posted on ${post.postdate.isoformat()}
-        </p>
+        <p py:if="showdate" class="postdate" title="Posted on ${post.postdate.isoformat()}">
+          Posted ${human.date(post.postdate, asdays=True)}</p>
         <h3 py:if="showuser" class="postuser"><a href="${genlink('user', post.userid)}">${post.userid}</a></h3>
 
         <div class="postdata">

@@ -50,6 +50,9 @@ b. sudo python setup.py install (pass --user to install it without sudo)
 a. either easy_install PyBrowserID or
 b. clone https://github.com/mozilla/PyBrowserID and python setup.py install
 
+9. Human-datetimedelta
+a. easy_install pytz
+
 Weekly Updates Config
 ---------------------
 1. Create the database
