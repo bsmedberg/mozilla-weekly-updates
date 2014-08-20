@@ -15,55 +15,51 @@
     <py:if test="'firefox' in team">
       ${editbugpost(todaypost)}
     </py:if>
-    <div class="col1">
+    <div class="sidebar">
       <py:if test="loginid is None">
-        <h2>Login</h2>
+        <h4>Login</h4>
         ${loginform()}
       </py:if>
 
+      <h4>All Projects</h4>
+      <ul>
+        <li py:for="project in projects"><a href="${genlink('project', project)}">${project}</a></li>
+      </ul>
+
       <py:if test="loginid is not None">
-        <h2>Current Status
-          <span class="subhead" py:if="userposts[0].postdate is not None">
-            - Posted on ${userposts[0].postdate.isoformat()}
-          </span>
-        </h2>
+        <h4 class="standalone"><a href="${genlink('posts')}">Recent Posts (All Users)</a></h4>
+      </py:if>
+    </div>
+    <div class="maincontent">
+      <py:if test="loginid is not None">
+        <h4>Your Current Status
+          <small py:if="userposts[0].postdate is not None" class="pull-right"
+            title="Posted on ${userposts[0].postdate.isoformat()}">
+            <span class="glyphicon glyphicon-time"></span>
+            Posted ${human.date(userposts[0].postdate, asdays=True)}
+          </small>
+        </h4>
         ${postdetail(userposts[0], showuser=False, showdate=False)}
 
         <py:if test="not 'firefox' in team">
-          <h2 py:choose="todaypost.postdate">
+          <h4 py:choose="todaypost.postdate">
             <py:when test="None">New Status Report</py:when>
             <py:otherwise>Edit Today's Status</py:otherwise>
-          </h2>
+          </h4>
           ${editpost(todaypost)}
         </py:if>
-      </py:if>
 
-      <h2>All Projects</h2>
-      <ul class="bordered">
-        <li py:for="project in projects"><a href="${genlink('project', project)}">${project}</a></li>
-      </ul>
-      <form py:if="loginid is not None" action="${genlink('createproject')}"
-            method="POST">
-        <h3>Create a New Project</h3>
-        <label for="projectname">Project name:</label>
-        <input id="projectname" name="projectname" type="text" size="15"/>
-        <input type="submit" value="Create Project"/>
-      </form>
-    </div>
-    <div class="col2">
-      <py:if test="loginid is not None">
-        <h2><a href="${genlink('user', loginid, 'teamposts')}">Your Team Posts</a>
+        <h4><a href="${genlink('user', loginid, 'teamposts')}">Your Team Posts</a>
           <a href="${genlink('user', loginid, 'teamposts', 'feed')}" class="feedlink"/>
-        </h2>
+        </h4>
 
         ${postlist(teamposts)}
 
-        <h2 class="standalone"><a href="${genlink('posts')}">Recent Posts (All Users)</a></h2>
       </py:if>
       <py:if test="loginid is None">
-        <h2>Recent Posts (All Users)
+        <h4>Recent Posts (All Users)
           <a href="${genlink('feed')}" class="feedlink"/>
-        </h2>
+        </h4>
 
         ${postlist(recent)}
       </py:if>

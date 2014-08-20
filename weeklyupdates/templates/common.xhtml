@@ -63,17 +63,22 @@ import json
   </option>
 
   <div py:def="postdetail(post, showuser=True, showdate=True,
-                          cssclass='postdetail bordered')"
+                          cssclass='postdetail')"
        class="${cssclass}">
     <py:choose test="post.userid">
       <py:when test="None">
-        <p>No status posted</p>
+        <div class="postdata">
+          <p>No status posted</p>
+        </div>
       </py:when>
       <py:otherwise>
-        <p py:if="showdate" class="postdate" title="Posted on ${post.postdate.isoformat()}">
-          Posted ${human.date(post.postdate, asdays=True)}</p>
-        <h3 py:if="showuser" class="postuser"><a href="${genlink('user', post.userid)}"
-          ><img class="avatar" src="https://avatars.io/email/${post.userid}" />${post.userid}</a></h3>
+        <h4 py:if="showuser" class="postuser"><a href="${genlink('user', post.userid)}">
+          <img class="avatar" src="https://avatars.io/email/${post.userid}" />${post.userid}</a>
+          <small py:if="showdate" class="pull-right" title="Posted on ${post.postdate.isoformat()}">
+            <span class="glyphicon glyphicon-time"></span>
+            Posted ${human.date(post.postdate, asdays=True)}
+          </small>
+        </h4>
 
         <div class="postdata">
           <div class="newlines" py:if="post.bugs">
@@ -100,13 +105,13 @@ import json
     </py:choose>
   </div>
 
-  <div py:def="postlist(posts, showuser=True)" class="postlist bordered">
+  <div py:def="postlist(posts, showuser=True)" class="postlist">
     <py:for each="post in posts">
       ${postdetail(post, showuser=showuser, cssclass='postlistdetail')}
     </py:for>
   </div>
 
-  <div py:def="loginform()" class="bordered">
+  <div py:def="loginform()">
     <input type="button" value="Log in" onclick="doLogin()" />
   </div>
 
@@ -143,18 +148,18 @@ import json
 	onsubmit="clearPreview()">
 
     <div class="fullwidth bugs">
-      <div class="summary">${daysLeft} ${'day' if daysLeft==1 else 'day'}
+      <div class="summary">${daysLeft} ${'day' if daysLeft==1 else 'days'}
         remaining in iteration ${iteration}.</div>
       <div class="col1">
         <div class="bordered">
           <div class="header none" py:if="not bugs">No bugs.</div>
-          <h3 class="header" py:if="bugs" >Current bugs you have committed to in
-          this iteration.</h3>
+          <h4 class="header" py:if="bugs" >Current bugs you have committed to in
+          this iteration.</h4>
           <ul>
           <py:for each="bug in bugs">
             <li><div class="bug"><a href="https://bugzilla.mozilla.org/show_bug.cgi?id=${bug.id}"
               >Bug ${bug.id}</a> - ${bug.summary}</div>
-              <div class="progress">
+              <div class="bugProgress">
                 <input type="radio" name="bug${bug.id}" value="notstarted"
                   checked="${bug.notstarted}">Not Started</input>
                 <input type="radio" name="bug${bug.id}" value="inprogress"
@@ -170,18 +175,18 @@ import json
       <div class="status col2">
         <div class="bordered">
           <div class="right-note"><a href="${genlink('markup')}" target="markup">Markdown Details</a></div>
-          <h3>1. What did you do yesterday?</h3>
+          <h4>1. What did you do yesterday?</h4>
           <p><textarea id="completed" name="completed" class="fullwidth"
             rows="${post.completed and post.completed.count('\n') + 1 or len(bugs)}"><py:choose
             ><py:when test="post.completed">${post.completed}</py:when
             ><py:otherwise>${"\n".join("Bug " + bug.id + " - " for bug in bugs)}</py:otherwise
           ></py:choose></textarea></p>
 
-          <h3>2. What will you do today?</h3>
+          <h4>2. What will you do today?</h4>
           <p><textarea id="planned" name="planned" class="fullwidth"
             rows="${post.planned and post.planned.count('\n') + 1 or 1}">${post.planned}</textarea></p>
 
-          <h3>3. Are you blocked on anything?  What?</h3>
+          <h4>3. Are you blocked on anything?  What?</h4>
           <p><textarea id="tags" name="tags" class="fullwidth"
             rows="${post.tags and post.tags.count('\n') + 1 or 1}">${post.tags}</textarea></p>
 
