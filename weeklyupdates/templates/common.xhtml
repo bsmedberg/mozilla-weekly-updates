@@ -13,7 +13,8 @@ import json
 
   <head py:match="head">
     ${select("*|text()")}
-    <link type="text/css" rel="stylesheet" href="${cherrypy.url('/static/ui.css')}" />
+    <link type="text/css" rel="stylesheet" href="${cherrypy.url('/static/css/ui.css')}" />
+    <link type="text/css" rel="stylesheet" href="${cherrypy.url('/static/css/bootstrap.css')}" />
     <link rel="icon" type="image/png" href="${genlink('static/weekly-updates-icon.png')}"/>
   </head>
 
@@ -42,7 +43,8 @@ import json
       var kPreviewURL = "${genlink('preview')}";
     </script>
     <script type="text/javascript" src="https://login.persona.org/include.js" />
-    <script type="text/javascript" src="${genlink('/static/persona.js')}" />
+    <script type="text/javascript" src="${genlink('/static/js/persona.js')}" />
+    <script type="text/javascript" src="${genlink('/static/js/bootstrap.js')}" />
   </body>
 
   <a py:match="a[@class='feedlink']" py:attrs="select('@*')" type="application/atom+xml">

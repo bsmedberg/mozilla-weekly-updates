@@ -51,6 +51,18 @@ body {
     display: inline-block;
     width: 50%;
   }
+
+  .sidebar {
+    float: left;
+    width: 18em;
+    padding-right: 0.5em;
+  }
+
+  .maincontent {
+    padding-left: 0.5em;
+    display: inline-block;
+    width: calc(100% - 19em);
+  }
 }
 
 h1, h2 {
@@ -143,18 +155,22 @@ ol.bordered > li {
 }
 
 .postdata {
-  margin-left: 0.5em;
+  margin-left: 52px;
 }
 
-.postlistdetail {
-  border-top: 1px solid #CCC;
+.postdetail {
+  border-bottom: 1px solid #CCC;
+}
+
+.postlistdetail .postdata {
+  border-bottom: 1px solid #CCC;
   padding-top: 2px;
   margin-top: 2px;
   font-size: smaller;
 }
 
-.postlistdetail:first-child {
-  border-top: none;
+.postlistdetail:last-child .postdata{
+  border-bottom: none;
   padding-top: 0;
   margin-top: 0;
 }
@@ -182,7 +198,12 @@ img {
 
 .bugpost {
   margin: 1.5em auto;
-  background-color: #FFF0CE;
+  background-color: #FFF2D6;
+  border: none;
+}
+
+.bugs {
+  font-size: 12px;
 }
 
 .bugs .summary {
@@ -195,10 +216,13 @@ img {
   color: #333333;
 }
 
+.bugs h3{
+  margin-top: 0px;
+}
+
 .bugs ul {
   list-style: none;
   padding-left: 0px;
-  font-size: 12px;
   margin: 0px;
 }
 
@@ -212,6 +236,8 @@ img {
   margin-top: auto;
   overflow: hidden;
   text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1;
 }
 
 .bugs input[type="button"],
