@@ -179,7 +179,7 @@ img {
 
 .bugs .summary {
   color: #666666;
-  font-size: 14px;
+  font-size: smaller;
   margin-bottom: 0.5em;
 }
 
@@ -190,7 +190,7 @@ img {
 .bugs ul {
   list-style: none;
   padding-left: 0px;
-  font-size: 12px;
+  font-size: 75%;
   margin: 0px;
 }
 
