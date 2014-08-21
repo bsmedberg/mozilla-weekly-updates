@@ -385,10 +385,9 @@ def get_bugstatus(cur, userid, bugids):
     cur.execute('''SELECT bugid,status FROM bugs WHERE userid = ? AND bugid in ?''',
                 (userid, bugids))
 
-    bugs = cur.fetchall()
     rv = {}
-    for bug in bugs:
-        rv[str(bug[0])] = bug[1]
+    for bugid, status in cur.fetchall():
+        rv[str(bugid)] = status
     return rv
 
 
