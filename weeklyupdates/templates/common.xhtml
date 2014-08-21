@@ -77,7 +77,7 @@ import json
             <h4 class="posthead">Bugs:</h4>
             <p><py:for each="bug in post.bugs">
               <a title="${bug.summary}" href="https://bugzilla.mozilla.org/show_bug.cgi?id=${bug.id}"
-                >Bug ${bug.id}</a> - ${bug.statusText}
+                >Bug ${bug.id}</a> - ${bug.status_text}
             </py:for></p>
           </div>
 
@@ -140,7 +140,7 @@ import json
 	onsubmit="clearPreview()">
 
     <div class="fullwidth bugs">
-      <div class="summary">${daysLeft} ${'day' if daysLeft==1 else 'day'}
+      <div class="summary">${daysleft} ${'day' if daysleft==1 else 'day'}
         remaining in iteration ${iteration}.</div>
       <div class="col1">
         <div class="bordered">

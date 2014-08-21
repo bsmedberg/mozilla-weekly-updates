@@ -9,6 +9,7 @@ import model, mail
 import browserid
 
 thisdir = os.path.abspath(os.path.dirname(__file__))
+bug_re = re.compile("^bug(\d+)$")
 
 loader = TemplateLoader(os.path.join(thisdir, 'templates'), auto_reload=True)
 def render(name, **kwargs):
@@ -29,7 +30,7 @@ class Root(object):
         loginid = cherrypy.request.loginid
 
         projects = model.get_projects()
-        iteration, daysLeft = model.get_currentIteration()
+        iteration, daysleft = model.get_current_iteration()
 
         if loginid is None:
             team = ()
@@ -46,7 +47,7 @@ class Root(object):
             recent = None
 
         return render('index.xhtml', projects=projects, recent=recent, team=team, bugs=bugs,
-                      iteration=iteration, daysLeft=daysLeft, teamposts=teamposts, userposts=userposts,
+                      iteration=iteration, daysleft=daysleft, teamposts=teamposts, userposts=userposts,
                       todaypost=todaypost)
 
     @model.requires_db
@@ -264,10 +265,10 @@ class Root(object):
 
         # kwargs will contain {"bugNNNNN": "newstatus", "bugMMMMMM": "otherstatus"}
         for key, value in kwargs.iteritems():
-            bugKey = re.match("^bug(\d+)$", key)
-            if not bugKey:
+            bug_key = bug_re.match(key)
+            if not bug_key:
                 continue
-            model.save_bugstatus(cur, bugKey.group(1), loginid, today, value)
+            model.save_bugstatus(cur, bug_key.group(1), loginid, today, value)
         allteam, sendnow = model.get_userteam_emails(loginid)
         if len(sendnow):
             mail.sendpost(email, allteam, sendnow,

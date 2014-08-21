@@ -213,7 +213,7 @@ def get_postbugs(post):
     bugs = [{'summary':summary, 'id':bugid, 'status':status}
       for (summary, bugid, status) in cur.fetchall()]
     for bug in bugs:
-        bug['statusText'] = statusbugtext.get(bug.get('status', 0), 'Unknown')
+        bug['status_text'] = statusbugtext.get(bug.get('status', 0), 'Unknown')
         bug['status'] = statusbugs.get(bug.get('status', 0), 'unknown')
         for key in bugstatuses.keys():
             bug[key] = None
@@ -347,25 +347,25 @@ def get_bugmail(cur, userid):
         bugmail = [bugmail, userid]
     return bugmail
 
-iterationRe = re.compile("<li> <b>Iteration ([0-9\.]+):</b>  ([^<]+)</li>")
+iteration_re = re.compile("<li> <b>Iteration ([0-9\.]+):</b>  ([^<]+)</li>")
 
-def get_currentIteration():
-    baseUrl = 'https://wiki.mozilla.org/Firefox/IterativeDevelopment/IterationSchedule'
-    r = requests.get(baseUrl)
-    currentIteration = "1.0"
-    daysLeft = 0
+def get_current_iteration():
+    base_url = 'https://wiki.mozilla.org/Firefox/IterativeDevelopment/IterationSchedule'
+    r = requests.get(base_url)
+    current_iteration = "1.0"
+    daysleft = 0
     strptime = datetime.datetime.strptime
     today = datetime.date.today()
-    thisYear = str(today.year)
+    this_year = str(today.year)
     if (r.status_code == 200):
-        iterations = [(value.strip(), date.strip()) for value,date in iterationRe.findall(r.text)]
+        iterations = [(value.strip(), date.strip()) for value,date in iteration_re.findall(r.text)]
         for i in iterations:
             iteration = i[0]
-            start, end = (strptime(y + " " + thisYear, "%A %B %d %Y").date() for y in i[1].split(' - '))
+            start, end = (strptime(y + " " + this_year, "%A %B %d %Y").date() for y in i[1].split(' - '))
             if start <= today <= end:
-                currentIteration = iteration
-                daysLeft = (end - today).days + 1 # We can work on the last day.
-    return (currentIteration, daysLeft)
+                current_iteration = iteration
+                daysleft = (end - today).days + 1 # We can work on the last day.
+    return (current_iteration, daysleft)
 
 def save_bugstatus(cur, bugid, userid, postdate, value):
     # bugid is the bug id as a string.
@@ -399,13 +399,13 @@ def get_bugstatus(cur, userid, bugids):
 
 def get_currentbugs(userid, iteration):
     cur = get_cursor()
-    baseUrl = 'https://api-dev.bugzilla.mozilla.org/latest/bug'
+    base_url = 'https://api-dev.bugzilla.mozilla.org/latest/bug'
     params = {
         'include_fields': 'id,assigned_to,summary,cf_fx_iteration,cf_fx_points',
         'status':['ASSIGNED','NEW','REOPENED'],
         'assigned_to': get_bugmail(cur, userid)
     }
-    r = requests.get(baseUrl, params=params)
+    r = requests.get(base_url, params=params)
     bugs = []
     if (r.status_code == 200):
         try:
@@ -426,7 +426,7 @@ def get_currentbugs(userid, iteration):
     statuses = get_bugstatus(cur, userid, [bug['id'] for bug in bugs])
     for bug in bugs:
         bug['status'] = statuses.get(bug['id'], 0)
-        bug['statusText'] = statusbugtext.get(bug.get('status', 0), 'Unknown')
+        bug['status_text'] = statusbugtext.get(bug.get('status', 0), 'Unknown')
         bug['status'] = statusbugs.get(bug.get('status', 0), 'unknown')
         for key in bugstatuses.keys():
             bug[key] = None
