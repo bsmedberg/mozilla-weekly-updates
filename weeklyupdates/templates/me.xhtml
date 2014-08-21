@@ -13,6 +13,10 @@
     <form action="${genlink('preferences')}" method="POST">
       <h3>Email</h3>
 
+      <p><label for="bugmail">Bugzilla email</label>
+        <input type="email" size="30" id="bugmail" name="bugmail" value="${(bugmail, userid)[bugmail is None]}" />
+      </p>
+
       <p><label for="email">Alternate Delivery Address</label>
         <input type="email" size="30" id="email" name="email" value="${(email, '')[email is None]}" />
       </p>

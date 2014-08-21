@@ -156,16 +156,20 @@ class Root(object):
 
         cur = model.get_cursor()
 
-        cur.execute('''SELECT email, reminderday, sendemail
+        cur.execute('''SELECT bugmail, email, reminderday, sendemail
                        FROM users WHERE userid = ?''',
                     (loginid,))
         r = cur.fetchone()
         if r is None:
             raise cherrypy.HTTPError(404, "User not found")
 
-        email, reminderday, sendemail = r
+        bugmail, email, reminderday, sendemail = r
 
         if cherrypy.request.method.upper() == 'POST':
+            bugmail = kwargs.pop('bugmail')
+            if bugmail == '' or bugmail == loginid:
+                bugmail = None
+
             email = kwargs.pop('email')
             if email == '':
                 email = None
@@ -183,9 +187,9 @@ class Root(object):
                 sendemail = int(sendemail)
 
             cur.execute('''UPDATE users
-                           SET email = ?, reminderday = ?, sendemail = ?
+                           SET bugmail = ?, email = ?, reminderday = ?, sendemail = ?
                            WHERE userid = ?''',
-                        (email, reminderday, sendemail, loginid))
+                        (bugmail, email, reminderday, sendemail, loginid))
 
             projectdata = []
             for k, v in kwargs.iteritems():
@@ -206,8 +210,9 @@ class Root(object):
                     (loginid,))
         projects = cur.fetchall()
 
-        return render('me.xhtml', email=email, reminderday=reminderday,
-                      sendemail=sendemail, projects=projects)
+        return render('me.xhtml', bugmail=bugmail, email=email,
+                      reminderday=reminderday, sendemail=sendemail,
+                      projects=projects, userid=loginid)
 
     def preview(self, completed, planned, tags, **kwargs):
         assert cherrypy.request.method.upper() == 'POST'

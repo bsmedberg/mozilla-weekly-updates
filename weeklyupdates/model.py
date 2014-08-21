@@ -1,5 +1,4 @@
 import threading
-import bugmail
 import cherrypy
 import datetime
 import json
@@ -339,11 +338,14 @@ def iter_weekly(cur, start, end):
             get_postbugs(post)
         yield userid, email, posts
 
-def get_bugmail(userid):
-    rv = bugmail.addresses.get(userid, userid)
-    if (rv != userid):
-        rv = [userid, rv]
-    return rv
+def get_bugmail(cur, userid):
+    cur.execute('''SELECT bugmail FROM users WHERE userid = ?''', (userid,))
+    (bugmail,) = cur.fetchone()
+    if bugmail == None:
+        bugmail = userid
+    if bugmail != userid:
+        bugmail = [bugmail, userid]
+    return bugmail
 
 iterationRe = re.compile("<li> <b>Iteration ([0-9\.]+):</b>  ([^<]+)</li>")
 
@@ -396,11 +398,12 @@ def get_bugstatus(cur, userid, bugids):
 
 
 def get_currentbugs(userid, iteration):
+    cur = get_cursor()
     baseUrl = 'https://api-dev.bugzilla.mozilla.org/latest/bug'
     params = {
         'include_fields': 'id,assigned_to,summary,cf_fx_iteration,cf_fx_points',
         'status':['ASSIGNED','NEW','REOPENED'],
-        'assigned_to': get_bugmail(userid)
+        'assigned_to': get_bugmail(cur, userid)
     }
     r = requests.get(baseUrl, params=params)
     bugs = []
@@ -411,7 +414,6 @@ def get_currentbugs(userid, iteration):
         except:
             pass
 
-    cur = get_cursor()
     for bug in bugs:
         rows = cur.execute('''SELECT title FROM bugtitles WHERE bugid = ?''',
                            (bug['id'],))

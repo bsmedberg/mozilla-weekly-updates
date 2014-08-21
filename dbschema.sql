@@ -2,6 +2,7 @@ CREATE TABLE IF NOT EXISTS users
 (
   userid VARCHAR(80) NOT NULL PRIMARY KEY,
   email VARCHAR(255),
+  bugmail VARCHAR(255),
   password VARCHAR(80) NULL,
   reminderday TINYINT NULL,
   sendemail TINYINT NULL
