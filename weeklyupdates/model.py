@@ -108,9 +108,7 @@ def get_user_posts(userid):
                    FROM posts
                    WHERE userid = ?
                    ORDER BY postdate DESC, posttime DESC LIMIT 10''', (userid,))
-    posts = [Post(r) for r in cur.fetchall()]
-    for post in posts:
-        get_postbugs(post)
+    posts = [create_post_with_bugs(r) for r in cur.fetchall()]
     if not len(posts):
         posts.append(Post(None))
         thispost = Post(None)
@@ -129,9 +127,7 @@ def get_user_feedposts(userid):
                      AND postdate >= ?
                    ORDER BY postdate DESC, posttime DESC''',
                 (userid, util.today().toordinal() - 15))
-    posts = [Post(d) for d in cur.fetchall()]
-    for post in posts:
-        get_postbugs(post)
+    posts = [create_post_with_bugs(d) for d in cur.fetchall()]
     return posts
 
 def get_all_userposts(userid):
@@ -140,9 +136,7 @@ def get_all_userposts(userid):
                    FROM posts
                    WHERE userid = ?
                    ORDER BY postdate DESC, posttime DESC''', (userid,))
-    posts = [Post(r) for r in cur.fetchall()]
-    for post in posts:
-        get_postbugs(post)
+    posts = [create_post_with_bugs(r) for r in cur.fetchall()]
     return posts
 
 def get_teamposts(userid):
@@ -157,9 +151,7 @@ def get_teamposts(userid):
                                   AND u1.userid = posts.userid
                                   AND u2.userid = ?)
                      ORDER BY postdate DESC, posttime DESC''', (userid,))
-    posts = [Post(d) for d in cur.fetchall()]
-    for post in posts:
-        get_postbugs(post)
+    posts = [create_post_with_bugs(d) for d in cur.fetchall()]
     return posts
 
 def get_feedposts():
@@ -169,9 +161,7 @@ def get_feedposts():
                    WHERE postdate > ?
                    ORDER BY postdate DESC, posttime DESC''',
                 (util.today().toordinal() - 15,))
-    posts = [Post(d) for d in cur.fetchall()]
-    for post in posts:
-        get_postbugs(post)
+    posts = [create_post_with_bugs(d) for d in cur.fetchall()]
     return posts
 
 def get_recentposts():
@@ -184,9 +174,7 @@ def get_recentposts():
                      AND postdate > ?
                    ORDER BY postdate DESC, posttime DESC''',
                 (util.today().toordinal() - 15,))
-    posts = [Post(d) for d in cur.fetchall()]
-    for post in posts:
-        get_postbugs(post)
+    posts = [create_post_with_bugs(d) for d in cur.fetchall()]
     return posts
 
 bugstatuses = {
@@ -203,7 +191,8 @@ statusbugtext = {
 }
 statusbugs = dict((v,k) for k, v in bugstatuses.iteritems())
 
-def get_postbugs(post):
+def create_post_with_bugs(data):
+    post = Post(data)
     cur = get_cursor()
     cur.execute('''SELECT titles.title, bug.bugid, bug.status
                    FROM bugtitles AS titles, bugs AS bug
@@ -220,6 +209,7 @@ def get_postbugs(post):
             bug[key] = None
         bug[bug['status']] = "checked"
     post.populatebugs(bugs)
+    return post
 
 
 def get_userprojects(userid):
@@ -286,9 +276,7 @@ def get_project_posts(projectname):
                                  WHERE userprojects.userid = posts.userid
                                  AND userprojects.projectname = ?)
                    ORDER BY postdate DESC, posttime DESC''', (projectname,))
-    posts = [Post(d) for d in cur.fetchall()]
-    for post in posts:
-        get_postbugs(post)
+    posts = [create_post_with_bugs(d) for d in cur.fetchall()]
     return posts
 
 def get_naglist(cur):
@@ -315,9 +303,7 @@ def iter_daily(cur, day):
                                     AND u2.userid = ?)
                        ORDER BY postdate ASC, posttime ASC''',
                     (day.toordinal(), userid))
-        posts = [Post(r) for r in cur.fetchall()]
-        for post in posts:
-            get_postbugs(post)
+        posts = [create_post_with_bugs(r) for r in cur.fetchall()]
         yield userid, email, posts
 
 def iter_weekly(cur, start, end):
@@ -334,9 +320,7 @@ def iter_weekly(cur, start, end):
                                     AND u2.userid = ?)
                        ORDER BY postdate ASC, posttime ASC''',
                     (start.toordinal(), end.toordinal(), userid))
-        posts = [Post(r) for r in cur.fetchall()]
-        for post in posts:
-            get_postbugs(post)
+        posts = [create_post_with_bugs(r) for r in cur.fetchall()]
         yield userid, email, posts
 
 def get_bugmail(cur, userid):
