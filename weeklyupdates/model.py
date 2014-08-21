@@ -191,6 +191,24 @@ statusbugtext = {
 }
 statusbugs = dict((v,k) for k, v in bugstatuses.iteritems())
 
+class Bug(object):
+    def __init__(self, record):
+        self.summary, self.id, self.statusnum = record
+        self.status_text = statusbugtext.get(self.statusnum, 'Unknown')
+        self.status = statusbugs.get(self.statusnum, 'unknown')
+        self.unknown = self.notstarted = self.inprogress = self.inreview = None
+        if self.status == "unknown":
+            self.unknown = "checked"
+        elif self.status == "notstarted":
+            self.notstarted = "checked"
+        elif self.status == "inprogress":
+            self.inprogress = "checked"
+        elif self.status == "inreview":
+            self.inreview = "checked"
+
+    def __str__(self):
+        return "%s - %s\n  %d %s" % (self.id, self.summary, self.status, self.status_text)
+
 def create_post_with_bugs(data):
     post = Post(data)
     cur = get_cursor()
@@ -200,15 +218,7 @@ def create_post_with_bugs(data):
                      AND bug.postdate = ?
                      AND bug.bugid = titles.bugid''',
       (post.userid, post.postdate.toordinal()))
-    bugs = [{'summary':summary, 'id':bugid, 'status':status}
-      for (summary, bugid, status) in cur.fetchall()]
-    for bug in bugs:
-        bug['status_text'] = statusbugtext.get(bug.get('status', 0), 'Unknown')
-        bug['status'] = statusbugs.get(bug.get('status', 0), 'unknown')
-        for key in bugstatuses.keys():
-            bug[key] = None
-        bug[bug['status']] = "checked"
-    post.populatebugs(bugs)
+    post.populatebugs([Bug(record) for record in cur.fetchall()])
     return post
 
 
@@ -402,15 +412,15 @@ def get_currentbugs(userid, iteration):
         'assigned_to': get_bugmail(cur, userid)
     }
     r = urllib2.urlopen(base_url + '?' + encode_params(params))
-    bugs = []
+    bugData = []
     if (r.getcode() == 200):
         try:
-            bugs = json.loads(r.read())['bugs']
-            bugs = filter(lambda (bug): bug['cf_fx_iteration'] == iteration, bugs)
+            bugData = json.loads(r.read())['bugs']
+            bugData = filter(lambda (bug): bug['cf_fx_iteration'] == iteration, bugData)
         except:
             pass
 
-    for bug in bugs:
+    for bug in bugData:
         rows = cur.execute('''SELECT title FROM bugtitles WHERE bugid = ?''',
                            (bug['id'],))
         if rows:
@@ -419,12 +429,5 @@ def get_currentbugs(userid, iteration):
         else:
             updated = cur.execute('''INSERT INTO bugtitles (bugid, title) VALUES (?, ?)''',
                                   (bug['id'], bug['summary']))
-    statuses = get_bugstatus(cur, userid, [bug['id'] for bug in bugs])
-    for bug in bugs:
-        bug['status'] = statuses.get(bug['id'], 0)
-        bug['status_text'] = statusbugtext.get(bug.get('status', 0), 'Unknown')
-        bug['status'] = statusbugs.get(bug.get('status', 0), 'unknown')
-        for key in bugstatuses.keys():
-            bug[key] = None
-        bug[bug['status']] = "checked"
-    return bugs
+    statuses = get_bugstatus(cur, userid, [bug['id'] for bug in bugData])
+    return [Bug((bug['summary'], bug['id'], statuses.get(str(bug['id']), 0))) for bug in bugData]
