@@ -420,13 +420,13 @@ def get_currentbugs(userid, iteration):
             pass
 
     for bug in bugData:
-        rows = cur.execute('''SELECT title FROM bugtitles WHERE bugid = ?''',
-                           (bug['id'],))
-        if rows:
-            updated = cur.execute('''UPDATE bugtitles SET title = ? WHERE bugid = ?''',
-                                (bug['summary'], bug['id']))
-        else:
+        cur.execute('''SELECT title FROM bugtitles WHERE bugid = ?''', (bug['id'],))
+        rows = cur.fetchone()
+        if rows == None:
             updated = cur.execute('''INSERT INTO bugtitles (bugid, title) VALUES (?, ?)''',
                                   (bug['id'], bug['summary']))
+        elif rows != (bug['summary'],):
+            updated = cur.execute('''UPDATE bugtitles SET title = ? WHERE bugid = ?''',
+                                (bug['summary'], bug['id']))
     statuses = get_bugstatus(cur, userid, [bug['id'] for bug in bugData])
     return [Bug((bug['summary'], bug['id'], statuses.get(str(bug['id']), 0))) for bug in bugData]
