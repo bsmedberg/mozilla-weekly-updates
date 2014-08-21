@@ -3,7 +3,8 @@ import cherrypy
 import datetime
 import json
 import re
-import requests
+import urllib
+import urllib2
 import util
 from post import Post
 
@@ -351,14 +352,14 @@ iteration_re = re.compile("<li> <b>Iteration ([0-9\.]+):</b>  ([^<]+)</li>")
 
 def get_current_iteration():
     base_url = 'https://wiki.mozilla.org/Firefox/IterativeDevelopment/IterationSchedule'
-    r = requests.get(base_url)
+    r = urllib2.urlopen(base_url)
     current_iteration = "1.0"
     daysleft = 0
     strptime = datetime.datetime.strptime
     today = datetime.date.today()
     this_year = str(today.year)
-    if (r.status_code == 200):
-        iterations = [(value.strip(), date.strip()) for value,date in iteration_re.findall(r.text)]
+    if (r.getcode() == 200):
+        iterations = [(value.strip(), date.strip()) for value,date in iteration_re.findall(r.read())]
         for i in iterations:
             iteration = i[0]
             start, end = (strptime(y + " " + this_year, "%A %B %d %Y").date() for y in i[1].split(' - '))
@@ -397,6 +398,17 @@ def get_bugstatus(cur, userid, bugids):
     return rv
 
 
+def encode_params(params):
+    result = []
+    for key, values in params.items():
+        if isinstance(values, basestring) or not hasattr(values, '__iter__'):
+            values = [values]
+        for value in values:
+            result.append(
+                (key.encode('utf-8') if isinstance(key, str) else key,
+                 value.encode('utf-8') if isinstance(value, str) else value))
+    return urllib.urlencode(result, doseq=True)
+
 def get_currentbugs(userid, iteration):
     cur = get_cursor()
     base_url = 'https://api-dev.bugzilla.mozilla.org/latest/bug'
@@ -405,11 +417,11 @@ def get_currentbugs(userid, iteration):
         'status':['ASSIGNED','NEW','REOPENED'],
         'assigned_to': get_bugmail(cur, userid)
     }
-    r = requests.get(base_url, params=params)
+    r = urllib2.urlopen(base_url + '?' + encode_params(params))
     bugs = []
-    if (r.status_code == 200):
+    if (r.getcode() == 200):
         try:
-            bugs = json.loads(r.text)['bugs']
+            bugs = json.loads(r.read())['bugs']
             bugs = filter(lambda (bug): bug['cf_fx_iteration'] == iteration, bugs)
         except:
             pass
