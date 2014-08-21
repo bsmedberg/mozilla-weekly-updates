@@ -219,7 +219,6 @@ class Root(object):
 
         today = util.today().toordinal()
         now = util.now()
-        # import sys; print >> sys.stderr, kwargs
 	# Modify kwargs to populate bugs!
 	# [ {summary: 'YYY', id: NNN, statusText: 'YYY'}, ...]
         post = Post(('<preview>', today, now, completed.decode("utf-8"), planned.decode("utf-8"), tags.decode("utf-8")))
