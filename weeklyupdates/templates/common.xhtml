@@ -153,11 +153,11 @@ import json
               >Bug ${bug.id}</a> - ${bug.summary}</div>
               <div class="progress">
                 <input type="radio" name="bug${bug.id}" value="notstarted"
-                  checked="${bug.notstarted}">Not Started</input>
+                  checked="${'checked' if bug.status == 'notstarted' else ''}">Not Started</input>
                 <input type="radio" name="bug${bug.id}" value="inprogress"
-                  checked="${bug.inprogress}">In Progress</input>
+                  checked="${'checked' if bug.status == 'inprogress' else ''}">In Progress</input>
                 <input type="radio" name="bug${bug.id}" value="inreview"
-                  checked="${bug.inreview}">In Review</input>
+                  checked="${'checked' if bug.status == 'inreview' else ''}">In Review</input>
               </div>
             </li>
           </py:for>

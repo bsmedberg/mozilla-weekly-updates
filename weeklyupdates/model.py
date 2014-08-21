@@ -196,15 +196,6 @@ class Bug(object):
         self.summary, self.id, self.statusnum = record
         self.status_text = statusbugtext.get(self.statusnum, 'Unknown')
         self.status = statusbugs.get(self.statusnum, 'unknown')
-        self.unknown = self.notstarted = self.inprogress = self.inreview = None
-        if self.status == "unknown":
-            self.unknown = "checked"
-        elif self.status == "notstarted":
-            self.notstarted = "checked"
-        elif self.status == "inprogress":
-            self.inprogress = "checked"
-        elif self.status == "inreview":
-            self.inreview = "checked"
 
     def __str__(self):
         return "%s - %s\n  %d %s" % (self.id, self.summary, self.status, self.status_text)
