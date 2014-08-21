@@ -171,6 +171,12 @@ import json
           </py:for>
           </ul>
         </div>
+
+        <iframe id="previewFrame" name="previewFrame" class="hidden fullwidth"/>
+        <div id="previewOuter" class="hidden fullwidth bordered">
+          <h4>Preview:</h4>
+          <div id="previewInner" />
+        </div>
       </div>
       <div class="status col2">
         <div class="bordered">
@@ -198,12 +204,6 @@ import json
       <br clear="both"/>
       <input type="submit" value="Submit"/>
       <input type="button" value="Preview" onclick="doPreview()"/>
-
-      <iframe id="previewFrame" name="previewFrame" class="hidden fullwidth"/>
-      <div id="previewOuter" class="hidden fullwidth">
-        <h4>Preview:</h4>
-        <div id="previewInner" />
-      </div>
     </div>
   </form>
 </div>
