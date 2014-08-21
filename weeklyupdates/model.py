@@ -342,10 +342,10 @@ def get_bugmail(cur, userid):
         bugmail = [bugmail, userid]
     return bugmail
 
-iteration_re = re.compile("<li> <b>Iteration ([0-9\.]+):</b>  ([^<]+)</li>")
+iteration_re = re.compile("\* '''Iteration ([0-9\.]+):'''  ([^*<]+)")
 
 def get_current_iteration():
-    base_url = 'https://wiki.mozilla.org/Firefox/IterativeDevelopment/IterationSchedule'
+    base_url = 'https://wiki.mozilla.org/Firefox/IterativeDevelopment/IterationSchedule?action=raw'
     r = urllib2.urlopen(base_url)
     current_iteration = "1.0"
     daysleft = 0
