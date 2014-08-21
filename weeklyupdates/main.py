@@ -219,8 +219,6 @@ class Root(object):
 
         today = util.today().toordinal()
         now = util.now()
-	# Modify kwargs to populate bugs!
-	# [ {summary: 'YYY', id: NNN, statusText: 'YYY'}, ...]
         post = Post(('<preview>', today, now, completed.decode("utf-8"), planned.decode("utf-8"), tags.decode("utf-8")))
         return render('preview.xhtml', post=post)
 
