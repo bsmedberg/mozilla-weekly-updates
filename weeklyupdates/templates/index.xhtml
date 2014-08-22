@@ -12,8 +12,8 @@
           type="application/atom+xml" rel="alternate" title="My Team Posts"/>
   </head>
   <body class="2col">
-    <py:if test="'firefox' in team">
-      ${editbugpost(todaypost)}
+    <py:if test="loginid is not None">
+      ${editpost(todaypost)}
     </py:if>
     <div class="col1">
       <py:if test="loginid is None">
@@ -21,21 +21,13 @@
         ${loginform()}
       </py:if>
 
-      <py:if test="loginid is not None">
+      <py:if test="'firefox' in team and loginid is not None">
         <h2>Current Status
           <span class="subhead" py:if="userposts[0].postdate is not None">
             - Posted on ${userposts[0].postdate.isoformat()}
           </span>
         </h2>
         ${postdetail(userposts[0], showuser=False, showdate=False)}
-
-        <py:if test="not 'firefox' in team">
-          <h2 py:choose="todaypost.postdate">
-            <py:when test="None">New Status Report</py:when>
-            <py:otherwise>Edit Today's Status</py:otherwise>
-          </h2>
-          ${editpost(todaypost)}
-        </py:if>
       </py:if>
 
       <h2>All Projects</h2>

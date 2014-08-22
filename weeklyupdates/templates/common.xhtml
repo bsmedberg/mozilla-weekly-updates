@@ -107,75 +107,84 @@ import json
     <input type="button" value="Log in" onclick="doLogin()" />
   </div>
 
-  <form py:def="editpost(post)" class="editpost bordered"
-        action="${genlink('post')}" method="POST" id="postform"
-	onsubmit="clearPreview()">
-
-    <div class="fullwidth">
-      <div class="right-note"><a href="${genlink('markup')}" target="markup">Markdown Details</a></div>
-      <h3>Done</h3>
-      <p><textarea id="completed" name="completed" class="fullwidth" rows="6">${post.completed}</textarea></p>
-
-      <h3>Next</h3>
-      <p><textarea id="planned" name="planned" class="fullwidth" rows="6">${post.planned}</textarea></p>
-
-      <h3>Coordination</h3>
-      <p><textarea id="tags" name="tags" class="fullwidth" rows="3">${post.tags}</textarea></p>
-
-      <input py:if="post.postdate is not None"
-             type="hidden" name="isedit" value="1"/>
-
-      <iframe id="previewFrame" name="previewFrame" class="hidden fullwidth"/>
-      <div id="previewOuter" class="hidden fullwidth">
-	<h4>Preview:</h4>
-	<div id="previewInner" />
-      </div>
-
-      <p><input type="button" value="Preview" onclick="doPreview()"/><input type="submit" value="Submit" /></p>
-    </div>
-  </form>
-
-  <form py:def="editbugpost(post)" class="editpost bordered bugpost"
+  <form py:def="editpost(post)" class="editpost bordered bugpost"
         action="${genlink('post')}" method="POST" id="postform"
 	onsubmit="clearPreview()">
 
     <div class="fullwidth bugs">
-      <div class="summary">${daysleft} ${'day' if daysleft==1 else 'days'}
-        remaining in iteration ${iteration}.</div>
+      <py:if test="'firefox' in team">
+        <div class="summary">${daysleft} ${'day' if daysleft==1 else 'days'}
+          remaining in iteration ${iteration}.</div>
+      </py:if>
       <div class="col1">
         <div class="bordered">
-          <div class="header none" py:if="not bugs">No bugs.</div>
-          <h3 class="header" py:if="bugs" >Current bugs you have committed to in
-          this iteration.</h3>
-          <ul>
-          <py:for each="bug in bugs">
-            <li><div class="bug"><a href="https://bugzilla.mozilla.org/show_bug.cgi?id=${bug.id}"
-              >Bug ${bug.id}</a> - ${bug.summary}</div>
-              <div class="progress">
-                <input type="radio" name="bug${bug.id}" value="notstarted"
-                  checked="${'checked' if bug.status == 'notstarted' else ''}">Not Started</input>
-                <input type="radio" name="bug${bug.id}" value="inprogress"
-                  checked="${'checked' if bug.status == 'inprogress' else ''}">In Progress</input>
-                <input type="radio" name="bug${bug.id}" value="inreview"
-                  checked="${'checked' if bug.status == 'inreview' else ''}">In Review</input>
-              </div>
-            </li>
-          </py:for>
-          </ul>
+          <py:choose>
+            <py:when test="'firefox' in team">
+              <h3 class="header none" py:if="not bugs">No bugs.</h3>
+              <h3 class="header" py:if="bugs" >Current bugs you have committed to in
+              this iteration.</h3>
+              <ul>
+                <py:for each="bug in bugs">
+                  <li><div class="bug"><a href="https://bugzilla.mozilla.org/show_bug.cgi?id=${bug.id}"
+                    >Bug ${bug.id}</a> - ${bug.summary}</div>
+                    <div class="progress">
+                      <input type="radio" name="bug${bug.id}" value="notstarted"
+                        checked="${'checked' if bug.status == 'notstarted' else ''}">Not Started</input>
+                      <input type="radio" name="bug${bug.id}" value="inprogress"
+                        checked="${'checked' if bug.status == 'inprogress' else ''}">In Progress</input>
+                      <input type="radio" name="bug${bug.id}" value="inreview"
+                        checked="${'checked' if bug.status == 'inreview' else ''}">In Review</input>
+                    </div>
+                  </li>
+                </py:for>
+              </ul>
+            </py:when>
+            <py:otherwise>
+              <py:if test="loginid is not None">
+                <h2>Current Status
+                  <span class="subhead" py:if="userposts[0].postdate is not None">
+                    - Posted on ${userposts[0].postdate.isoformat()}
+                  </span>
+                </h2>
+                ${postdetail(userposts[0], showuser=False, showdate=False)}
+              </py:if>
+            </py:otherwise>
+          </py:choose>
         </div>
       </div>
       <div class="status col2">
         <div class="bordered">
           <div class="right-note"><a href="${genlink('markup')}" target="markup">Markdown Details</a></div>
-          <h3>1. What did you do yesterday?</h3>
+          <py:choose>
+            <py:when test="'firefox' in team">
+              <h3>1. What did you do yesterday?</h3>
+            </py:when>
+            <py:otherwise>
+              <h3>Done</h3>
+            </py:otherwise>
+          </py:choose>
           <p><textarea id="completed" name="completed" class="fullwidth"
             rows="${post.completed and post.completed.count('\n') + 1 or 1}">${post.completed}</textarea></p>
 
-          <h3>2. What will you do today?</h3>
+          <py:choose>
+            <py:when test="'firefox' in team">
+              <h3>2. What will you do today?</h3>
+            </py:when>
+            <py:otherwise>
+              <h3>Next</h3>
+            </py:otherwise>
+          </py:choose>
           <p><textarea id="planned" name="planned" class="fullwidth"
             rows="${post.planned and post.planned.count('\n') + 1 or 1}">${post.planned}</textarea></p>
 
-          <h3>3. Are you blocked on anything?  What?</h3>
+          <py:choose>
+            <py:when test="'firefox' in team">
+              <h3>3. Are you blocked on anything?  What?</h3>
+            </py:when>
+            <py:otherwise>
+              <h3>Coordination</h3>
+            </py:otherwise>
+          </py:choose>
           <p><textarea id="tags" name="tags" class="fullwidth"
             rows="${post.tags and post.tags.count('\n') + 1 or len(bugs)}"><py:choose
             ><py:when test="post.tags">${post.tags}</py:when
