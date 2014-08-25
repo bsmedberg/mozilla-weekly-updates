@@ -84,7 +84,7 @@ import json
             <h4 class="posthead">Bugs:</h4>
             <p><py:for each="bug in post.bugs">
               <py:choose test="bug.status"
-                ><py:when test="'notstarted'"><span class="glyphicon glyphicon-stop status-notstarted"
+                ><py:when test="'notstarted'"><span class="glyphicon glyphicon-remove status-notstarted"
                   title="${bug.status_text}"></span></py:when
                 ><py:when test="'inprogress'"><span class="glyphicon glyphicon-refresh status-inprogress"
                   title="${bug.status_text}"></span></py:when
@@ -141,12 +141,20 @@ import json
                 <li><div class="bug"><a href="https://bugzilla.mozilla.org/show_bug.cgi?id=${bug.id}"
                   >Bug ${bug.id}</a> - ${bug.summary}</div>
                   <div class="bugProgress">
-                    <input type="radio" name="bug${bug.id}" value="notstarted"
-                      checked="${'checked' if bug.status == 'notstarted' else ''}">Not Started</input>
-                    <input type="radio" name="bug${bug.id}" value="inprogress"
-                      checked="${'checked' if bug.status == 'inprogress' else ''}">In Progress</input>
-                    <input type="radio" name="bug${bug.id}" value="inreview"
-                      checked="${'checked' if bug.status == 'inreview' else ''}">In Review</input>
+                    <select name="bug${bug.id}">
+                      <option value="notstarted"
+                        selected="${'selected' if bug.status == 'notstarted' else ''}"><span
+                        class="glyphicon glyphicon-remove status-notstarted" title="${bug.status_text}"
+                        ></span>Not Started</option>
+                      <option value="inprogress"
+                        selected="${'selected' if bug.status == 'inprogress' else ''}"><span
+                        class="glyphicon glyphicon-refresh status-inprogress" title="${bug.status_text}"
+                        ></span>In Progress</option>
+                      <option value="inreview"
+                        selected="${'selected' if bug.status == 'inreview' else ''}"><span
+                        class="glyphicon glyphicon-ok status-inreview" title="${bug.status_text}"
+                        ></span>In Review</option>
+                    </select>
                   </div>
                 </li>
               </py:for>
