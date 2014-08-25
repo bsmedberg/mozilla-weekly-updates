@@ -121,7 +121,7 @@ import json
 
     <div class="fullwidth bugs">
       <py:if test="'firefox' in team">
-        <div class="summary">${daysLeft} ${'day' if daysLeft==1 else 'days'}
+        <div class="summary">${daysleft} ${'day' if daysleft==1 else 'days'}
           remaining in iteration ${iteration}.</div>
       </py:if>
       <div class="col1">
@@ -137,11 +137,11 @@ import json
                   >Bug ${bug.id}</a> - ${bug.summary}</div>
                   <div class="bugProgress">
                     <input type="radio" name="bug${bug.id}" value="notstarted"
-                      checked="${bug.notstarted}">Not Started</input>
+                      checked="${'checked' if bug.status == 'notstarted' else ''}">Not Started</input>
                     <input type="radio" name="bug${bug.id}" value="inprogress"
-                      checked="${bug.inprogress}">In Progress</input>
+                      checked="${'checked' if bug.status == 'inprogress' else ''}">In Progress</input>
                     <input type="radio" name="bug${bug.id}" value="inreview"
-                      checked="${bug.inreview}">In Review</input>
+                      checked="${'checked' if bug.status == 'inreview' else ''}">In Review</input>
                   </div>
                 </li>
               </py:for>

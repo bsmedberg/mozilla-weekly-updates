@@ -43,14 +43,6 @@
           ${postdetail(userposts[0], showuser=False, showdate=False)}
         </py:if>
 
-        <py:if test="not 'firefox' in team">
-          <h4 py:choose="todaypost.postdate">
-            <py:when test="None">New Status Report</py:when>
-            <py:otherwise>Edit Today's Status</py:otherwise>
-          </h4>
-          ${editpost(todaypost)}
-        </py:if>
-
         <h4><a href="${genlink('user', loginid, 'teamposts')}">Your Team Posts</a>
           <a href="${genlink('user', loginid, 'teamposts', 'feed')}" class="feedlink"/>
         </h4>
