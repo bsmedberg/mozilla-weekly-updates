@@ -168,11 +168,26 @@ ol.bordered > li {
   font-size: smaller;
 }
 
-.postlistdetail:last-child .postdata{
+.postlistdetail:last-child .postdata {
   border-bottom: none;
   padding-top: 0;
   margin-top: 0;
 }
+
+.postdata .glyphicon {
+  margin-right: 0.5em;
+}
+
+.glyphicon.status-notstarted {
+  color: #d62728;
+}
+.glyphicon.status-inprogress {
+  color: #ff7f0e;
+}
+.glyphicon.status-inreview {
+  color: #2ca02c;
+}
+
 
 .postdate {
   float: right;
