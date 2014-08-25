@@ -1,10 +1,10 @@
 import threading
-import bugmail
 import cherrypy
 import datetime
 import json
 import re
-import requests
+import urllib
+import urllib2
 import util
 from post import Post
 
@@ -108,9 +108,7 @@ def get_user_posts(userid):
                    FROM posts
                    WHERE userid = ?
                    ORDER BY postdate DESC, posttime DESC LIMIT 10''', (userid,))
-    posts = [Post(r) for r in cur.fetchall()]
-    for post in posts:
-        get_postbugs(post)
+    posts = [create_post_with_bugs(r) for r in cur.fetchall()]
     if not len(posts):
         posts.append(Post(None))
         thispost = Post(None)
@@ -129,9 +127,7 @@ def get_user_feedposts(userid):
                      AND postdate >= ?
                    ORDER BY postdate DESC, posttime DESC''',
                 (userid, util.today().toordinal() - 15))
-    posts = [Post(d) for d in cur.fetchall()]
-    for post in posts:
-        get_postbugs(post)
+    posts = [create_post_with_bugs(d) for d in cur.fetchall()]
     return posts
 
 def get_all_userposts(userid):
@@ -140,9 +136,7 @@ def get_all_userposts(userid):
                    FROM posts
                    WHERE userid = ?
                    ORDER BY postdate DESC, posttime DESC''', (userid,))
-    posts = [Post(r) for r in cur.fetchall()]
-    for post in posts:
-        get_postbugs(post)
+    posts = [create_post_with_bugs(r) for r in cur.fetchall()]
     return posts
 
 def get_teamposts(userid):
@@ -157,9 +151,7 @@ def get_teamposts(userid):
                                   AND u1.userid = posts.userid
                                   AND u2.userid = ?)
                      ORDER BY postdate DESC, posttime DESC''', (userid,))
-    posts = [Post(d) for d in cur.fetchall()]
-    for post in posts:
-        get_postbugs(post)
+    posts = [create_post_with_bugs(d) for d in cur.fetchall()]
     return posts
 
 def get_feedposts():
@@ -169,9 +161,7 @@ def get_feedposts():
                    WHERE postdate > ?
                    ORDER BY postdate DESC, posttime DESC''',
                 (util.today().toordinal() - 15,))
-    posts = [Post(d) for d in cur.fetchall()]
-    for post in posts:
-        get_postbugs(post)
+    posts = [create_post_with_bugs(d) for d in cur.fetchall()]
     return posts
 
 def get_recentposts():
@@ -184,9 +174,7 @@ def get_recentposts():
                      AND postdate > ?
                    ORDER BY postdate DESC, posttime DESC''',
                 (util.today().toordinal() - 15,))
-    posts = [Post(d) for d in cur.fetchall()]
-    for post in posts:
-        get_postbugs(post)
+    posts = [create_post_with_bugs(d) for d in cur.fetchall()]
     return posts
 
 bugstatuses = {
@@ -203,7 +191,17 @@ statusbugtext = {
 }
 statusbugs = dict((v,k) for k, v in bugstatuses.iteritems())
 
-def get_postbugs(post):
+class Bug(object):
+    def __init__(self, record):
+        self.summary, self.id, self.statusnum = record
+        self.status_text = statusbugtext.get(self.statusnum, 'Unknown')
+        self.status = statusbugs.get(self.statusnum, 'unknown')
+
+    def __str__(self):
+        return "%s - %s\n  %d %s" % (self.id, self.summary, self.status, self.status_text)
+
+def create_post_with_bugs(data):
+    post = Post(data)
     cur = get_cursor()
     cur.execute('''SELECT titles.title, bug.bugid, bug.status
                    FROM bugtitles AS titles, bugs AS bug
@@ -211,15 +209,8 @@ def get_postbugs(post):
                      AND bug.postdate = ?
                      AND bug.bugid = titles.bugid''',
       (post.userid, post.postdate.toordinal()))
-    bugs = [{'summary':summary, 'id':bugid, 'status':status}
-      for (summary, bugid, status) in cur.fetchall()]
-    for bug in bugs:
-        bug['statusText'] = statusbugtext.get(bug.get('status', 0), 'Unknown')
-        bug['status'] = statusbugs.get(bug.get('status', 0), 'unknown')
-        for key in bugstatuses.keys():
-            bug[key] = None
-        bug[bug['status']] = "checked"
-    post.populatebugs(bugs)
+    post.populatebugs([Bug(record) for record in cur.fetchall()])
+    return post
 
 
 def get_userprojects(userid):
@@ -286,9 +277,7 @@ def get_project_posts(projectname):
                                  WHERE userprojects.userid = posts.userid
                                  AND userprojects.projectname = ?)
                    ORDER BY postdate DESC, posttime DESC''', (projectname,))
-    posts = [Post(d) for d in cur.fetchall()]
-    for post in posts:
-        get_postbugs(post)
+    posts = [create_post_with_bugs(d) for d in cur.fetchall()]
     return posts
 
 def get_naglist(cur):
@@ -315,9 +304,7 @@ def iter_daily(cur, day):
                                     AND u2.userid = ?)
                        ORDER BY postdate ASC, posttime ASC''',
                     (day.toordinal(), userid))
-        posts = [Post(r) for r in cur.fetchall()]
-        for post in posts:
-            get_postbugs(post)
+        posts = [create_post_with_bugs(r) for r in cur.fetchall()]
         yield userid, email, posts
 
 def iter_weekly(cur, start, end):
@@ -334,36 +321,37 @@ def iter_weekly(cur, start, end):
                                     AND u2.userid = ?)
                        ORDER BY postdate ASC, posttime ASC''',
                     (start.toordinal(), end.toordinal(), userid))
-        posts = [Post(r) for r in cur.fetchall()]
-        for post in posts:
-            get_postbugs(post)
+        posts = [create_post_with_bugs(r) for r in cur.fetchall()]
         yield userid, email, posts
 
-def get_bugmail(userid):
-    rv = bugmail.addresses.get(userid, userid)
-    if (rv != userid):
-        rv = [userid, rv]
-    return rv
+def get_bugmail(cur, userid):
+    cur.execute('''SELECT bugmail FROM users WHERE userid = ?''', (userid,))
+    (bugmail,) = cur.fetchone()
+    if bugmail == None:
+        bugmail = userid
+    if bugmail != userid:
+        bugmail = [bugmail, userid]
+    return bugmail
 
-iterationRe = re.compile("<li> <b>Iteration ([0-9\.]+):</b>  ([^<]+)</li>")
+iteration_re = re.compile("\* '''Iteration ([0-9\.]+):'''  ([^*<]+)")
 
-def get_currentIteration():
-    baseUrl = 'https://wiki.mozilla.org/Firefox/IterativeDevelopment/IterationSchedule'
-    r = requests.get(baseUrl)
-    currentIteration = "1.0"
-    daysLeft = 0
+def get_current_iteration():
+    base_url = 'https://wiki.mozilla.org/Firefox/IterativeDevelopment/IterationSchedule?action=raw'
+    r = urllib2.urlopen(base_url)
+    current_iteration = "1.0"
+    daysleft = 0
     strptime = datetime.datetime.strptime
     today = datetime.date.today()
-    thisYear = str(today.year)
-    if (r.status_code == 200):
-        iterations = [(value.strip(), date.strip()) for value,date in iterationRe.findall(r.text)]
+    this_year = str(today.year)
+    if (r.getcode() == 200):
+        iterations = [(value.strip(), date.strip()) for value,date in iteration_re.findall(r.read())]
         for i in iterations:
             iteration = i[0]
-            start, end = (strptime(y + " " + thisYear, "%A %B %d %Y").date() for y in i[1].split(' - '))
+            start, end = (strptime(y + " " + this_year, "%A %B %d %Y").date() for y in i[1].split(' - '))
             if start <= today <= end:
-                currentIteration = iteration
-                daysLeft = (end - today).days + 1 # We can work on the last day.
-    return (currentIteration, daysLeft)
+                current_iteration = iteration
+                daysleft = (end - today).days + 1 # We can work on the last day.
+    return (current_iteration, daysleft)
 
 def save_bugstatus(cur, bugid, userid, postdate, value):
     # bugid is the bug id as a string.
@@ -388,45 +376,48 @@ def get_bugstatus(cur, userid, bugids):
     cur.execute('''SELECT bugid,status FROM bugs WHERE userid = ? AND bugid in ?''',
                 (userid, bugids))
 
-    bugs = cur.fetchall()
     rv = {}
-    for bug in bugs:
-        rv[str(bug[0])] = bug[1]
+    for bugid, status in cur.fetchall():
+        rv[str(bugid)] = status
     return rv
 
 
+def encode_params(params):
+    result = []
+    for key, values in params.items():
+        if isinstance(values, basestring) or not hasattr(values, '__iter__'):
+            values = [values]
+        for value in values:
+            result.append(
+                (key.encode('utf-8') if isinstance(key, str) else key,
+                 value.encode('utf-8') if isinstance(value, str) else value))
+    return urllib.urlencode(result, doseq=True)
+
 def get_currentbugs(userid, iteration):
-    baseUrl = 'https://api-dev.bugzilla.mozilla.org/latest/bug'
+    cur = get_cursor()
+    base_url = 'https://api-dev.bugzilla.mozilla.org/latest/bug'
     params = {
         'include_fields': 'id,assigned_to,summary,cf_fx_iteration,cf_fx_points',
         'status':['ASSIGNED','NEW','REOPENED'],
-        'assigned_to': get_bugmail(userid)
+        'assigned_to': get_bugmail(cur, userid)
     }
-    r = requests.get(baseUrl, params=params)
-    bugs = []
-    if (r.status_code == 200):
+    r = urllib2.urlopen(base_url + '?' + encode_params(params))
+    bugData = []
+    if (r.getcode() == 200):
         try:
-            bugs = json.loads(r.text)['bugs']
-            bugs = filter(lambda (bug): bug['cf_fx_iteration'] == iteration, bugs)
+            bugData = json.loads(r.read())['bugs']
+            bugData = filter(lambda (bug): bug['cf_fx_iteration'] == iteration, bugData)
         except:
             pass
 
-    cur = get_cursor()
-    for bug in bugs:
-        rows = cur.execute('''SELECT title FROM bugtitles WHERE bugid = ?''',
-                           (bug['id'],))
-        if rows:
-            updated = cur.execute('''UPDATE bugtitles SET title = ? WHERE bugid = ?''',
-                                (bug['summary'], bug['id']))
-        else:
+    for bug in bugData:
+        cur.execute('''SELECT title FROM bugtitles WHERE bugid = ?''', (bug['id'],))
+        rows = cur.fetchone()
+        if rows == None:
             updated = cur.execute('''INSERT INTO bugtitles (bugid, title) VALUES (?, ?)''',
                                   (bug['id'], bug['summary']))
-    statuses = get_bugstatus(cur, userid, [bug['id'] for bug in bugs])
-    for bug in bugs:
-        bug['status'] = statuses.get(bug['id'], 0)
-        bug['statusText'] = statusbugtext.get(bug.get('status', 0), 'Unknown')
-        bug['status'] = statusbugs.get(bug.get('status', 0), 'unknown')
-        for key in bugstatuses.keys():
-            bug[key] = None
-        bug[bug['status']] = "checked"
-    return bugs
+        elif rows != (bug['summary'],):
+            updated = cur.execute('''UPDATE bugtitles SET title = ? WHERE bugid = ?''',
+                                (bug['summary'], bug['id']))
+    statuses = get_bugstatus(cur, userid, [bug['id'] for bug in bugData])
+    return [Bug((bug['summary'], bug['id'], statuses.get(str(bug['id']), 0))) for bug in bugData]

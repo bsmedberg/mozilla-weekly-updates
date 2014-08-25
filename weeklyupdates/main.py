@@ -9,6 +9,7 @@ import model, mail
 import browserid
 
 thisdir = os.path.abspath(os.path.dirname(__file__))
+bug_re = re.compile("^bug(\d+)$")
 
 loader = TemplateLoader(os.path.join(thisdir, 'templates'), auto_reload=True)
 def render(name, **kwargs):
@@ -29,7 +30,7 @@ class Root(object):
         loginid = cherrypy.request.loginid
 
         projects = model.get_projects()
-        iteration, daysLeft = model.get_currentIteration()
+        iteration, daysleft = model.get_current_iteration()
 
         if loginid is None:
             team = ()
@@ -46,13 +47,13 @@ class Root(object):
             recent = None
 
         return render('index.xhtml', projects=projects, recent=recent, team=team, bugs=bugs,
-                      iteration=iteration, daysLeft=daysLeft, teamposts=teamposts, userposts=userposts,
+                      iteration=iteration, daysleft=daysleft, teamposts=teamposts, userposts=userposts,
                       todaypost=todaypost)
 
     @model.requires_db
     def posts(self):
         recent = model.get_recentposts()
-        return render('posts.xhtml', recent=recent, bugs=None)
+        return render('posts.xhtml', recent=recent)
 
     @model.requires_db
     def feed(self):
@@ -115,7 +116,7 @@ class Root(object):
         teamposts = model.get_teamposts(userid)
 
         return render('user.xhtml', userid=userid, projects=projects,
-                      teamposts=teamposts, userposts=userposts, bugs=None)
+                      teamposts=teamposts, userposts=userposts)
 
     @model.requires_db
     def userposts(self, userid):
@@ -123,7 +124,7 @@ class Root(object):
         if not len(posts):
             raise cherrypy.HTTPError(404, "No posts found")
 
-        return render('userposts.xhtml', userid=userid, posts=posts, bugs=None)
+        return render('userposts.xhtml', userid=userid, posts=posts)
 
     @model.requires_db
     def userpostsfeed(self, userid):
@@ -139,7 +140,7 @@ class Root(object):
         team = model.get_userteam(userid)
 
         return render('teamposts.xhtml', userid=userid,
-                      teamposts=teamposts, team=team, bugs=None)
+                      teamposts=teamposts, team=team)
 
     @model.requires_db
     def userteampostsfeed(self, userid):
@@ -156,16 +157,20 @@ class Root(object):
 
         cur = model.get_cursor()
 
-        cur.execute('''SELECT email, reminderday, sendemail
+        cur.execute('''SELECT bugmail, email, reminderday, sendemail
                        FROM users WHERE userid = ?''',
                     (loginid,))
         r = cur.fetchone()
         if r is None:
             raise cherrypy.HTTPError(404, "User not found")
 
-        email, reminderday, sendemail = r
+        bugmail, email, reminderday, sendemail = r
 
         if cherrypy.request.method.upper() == 'POST':
+            bugmail = kwargs.pop('bugmail')
+            if bugmail == '' or bugmail == loginid:
+                bugmail = None
+
             email = kwargs.pop('email')
             if email == '':
                 email = None
@@ -183,9 +188,9 @@ class Root(object):
                 sendemail = int(sendemail)
 
             cur.execute('''UPDATE users
-                           SET email = ?, reminderday = ?, sendemail = ?
+                           SET bugmail = ?, email = ?, reminderday = ?, sendemail = ?
                            WHERE userid = ?''',
-                        (email, reminderday, sendemail, loginid))
+                        (bugmail, email, reminderday, sendemail, loginid))
 
             projectdata = []
             for k, v in kwargs.iteritems():
@@ -206,19 +211,17 @@ class Root(object):
                     (loginid,))
         projects = cur.fetchall()
 
-        return render('me.xhtml', email=email, reminderday=reminderday,
-                      sendemail=sendemail, projects=projects)
+        return render('me.xhtml', bugmail=bugmail, email=email,
+                      reminderday=reminderday, sendemail=sendemail,
+                      projects=projects, userid=loginid)
 
     def preview(self, completed, planned, tags, **kwargs):
         assert cherrypy.request.method.upper() == 'POST'
 
         today = util.today().toordinal()
         now = util.now()
-        # import sys; print >> sys.stderr, kwargs
-	# Modify kwargs to populate bugs!
-	# [ {summary: 'YYY', id: NNN, statusText: 'YYY'}, ...]
         post = Post(('<preview>', today, now, completed.decode("utf-8"), planned.decode("utf-8"), tags.decode("utf-8")))
-        return render('preview.xhtml', post=post, bugs=None)
+        return render('preview.xhtml', post=post)
 
     @require_login
     @model.requires_db
@@ -262,10 +265,10 @@ class Root(object):
 
         # kwargs will contain {"bugNNNNN": "newstatus", "bugMMMMMM": "otherstatus"}
         for key, value in kwargs.iteritems():
-            bugKey = re.match("^bug(\d+)$", key)
-            if not bugKey:
+            bug_key = bug_re.match(key)
+            if not bug_key:
                 continue
-            model.save_bugstatus(cur, bugKey.group(1), loginid, today, value)
+            model.save_bugstatus(cur, bug_key.group(1), loginid, today, value)
         allteam, sendnow = model.get_userteam_emails(loginid)
         if len(sendnow):
             mail.sendpost(email, allteam, sendnow,
@@ -307,7 +310,7 @@ class Root(object):
         late = model.get_project_late(projectname)
 
         return render('project.xhtml', projectname=projectname, users=users,
-                      posts=posts, late=late, bugs=None)
+                      posts=posts, late=late)
 
     @model.requires_db
     def projectfeed(self, projectname):

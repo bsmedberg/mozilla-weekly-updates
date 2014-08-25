@@ -12,8 +12,8 @@
           type="application/atom+xml" rel="alternate" title="My Team Posts"/>
   </head>
   <body class="2col">
-    <py:if test="'firefox' in team">
-      ${editbugpost(todaypost)}
+    <py:if test="loginid is not None">
+      ${editpost(todaypost)}
     </py:if>
     <div class="sidebar">
       <py:if test="loginid is None">
@@ -32,14 +32,16 @@
     </div>
     <div class="maincontent">
       <py:if test="loginid is not None">
-        <h4>Your Current Status
-          <small py:if="userposts[0].postdate is not None" class="pull-right"
-            title="Posted on ${userposts[0].postdate.isoformat()}">
-            <span class="glyphicon glyphicon-time"></span>
-            Posted ${human.date(userposts[0].postdate, asdays=True)}
-          </small>
-        </h4>
-        ${postdetail(userposts[0], showuser=False, showdate=False)}
+        <py:if test="'firefox' in team">
+          <h4>Your Current Status
+            <small py:if="userposts[0].postdate is not None" class="pull-right"
+              title="Posted on ${userposts[0].postdate.isoformat()}">
+              <span class="glyphicon glyphicon-time"></span>
+              Posted ${human.date(userposts[0].postdate, asdays=True)}
+            </small>
+          </h4>
+          ${postdetail(userposts[0], showuser=False, showdate=False)}
+        </py:if>
 
         <py:if test="not 'firefox' in team">
           <h4 py:choose="todaypost.postdate">
