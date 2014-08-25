@@ -50,3 +50,16 @@ function clearPreview()
 {
   document.getElementById('previewOuter').classList.add('hidden');
 }
+
+function doHide()
+{
+  var hide = $('#hide_button');
+  if (hide.attr('value') === 'Hide') {
+    hide.attr('value', 'Show');
+  } else {
+    hide.attr('value', 'Hide');
+  }
+  $('.bugheader').fadeToggle();
+  $('.bugs').slideToggle();
+}
+

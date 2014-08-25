@@ -17,7 +17,7 @@
     <div class="keeptogether">
       <h2>Current Status
         <span class="subhead" py:if="userposts[0].postdate is not None">
-          - Posted on ${userposts[0].postdate.isoformat()}
+          - ${userposts[0].postdate.isoformat()}
         </span>
       </h2>
       ${postdetail(userposts[0], showuser=False, showdate=False)}

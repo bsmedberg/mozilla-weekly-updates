@@ -42,6 +42,7 @@ import json
       var kPreviewURL = "${genlink('preview')}";
     </script>
     <script type="text/javascript" src="https://login.persona.org/include.js" />
+    <script type="text/javascript" src="${genlink('/static/js/jquery.js')}" />
     <script type="text/javascript" src="${genlink('/static/js/persona.js')}" />
     <script type="text/javascript" src="${genlink('/static/js/bootstrap.js')}" />
   </body>
@@ -75,7 +76,7 @@ import json
           <img class="avatar" src="https://avatars.io/email/${post.userid}" />${post.userid}</a>
           <small py:if="showdate" class="pull-right" title="Posted on ${post.postdate.isoformat()}">
             <span class="glyphicon glyphicon-time"></span>
-            Posted ${human.date(post.postdate, asdays=True)}
+            ${human.date(post.postdate, asdays=True)}
           </small>
         </h4>
 
@@ -128,59 +129,10 @@ import json
         action="${genlink('post')}" method="POST" id="postform"
 	onsubmit="clearPreview()">
 
+    <div class="fullwidth bugheader">Enter your status</div>
     <div class="fullwidth bugs">
-      <div class="col1">
-        <div class="bordered">
-          <py:choose>
-            <py:when test="'firefox' in team">
-              <div class="header none" py:if="not bugs">No bugs.</div>
-              <h4 class="header" py:if="bugs" >Current bugs you have committed to in
-              this iteration.</h4>
-              <ul>
-              <py:for each="bug in bugs">
-                <li><div class="bug"><a href="https://bugzilla.mozilla.org/show_bug.cgi?id=${bug.id}"
-                  >Bug ${bug.id}</a> - ${bug.summary}</div>
-                  <div class="bugProgress">
-                    <select name="bug${bug.id}">
-                      <option value="notstarted"
-                        selected="${'selected' if bug.status == 'notstarted' else ''}"><span
-                        class="glyphicon glyphicon-remove status-notstarted" title="${bug.status_text}"
-                        ></span>Not Started</option>
-                      <option value="inprogress"
-                        selected="${'selected' if bug.status == 'inprogress' else ''}"><span
-                        class="glyphicon glyphicon-refresh status-inprogress" title="${bug.status_text}"
-                        ></span>In Progress</option>
-                      <option value="inreview"
-                        selected="${'selected' if bug.status == 'inreview' else ''}"><span
-                        class="glyphicon glyphicon-ok status-inreview" title="${bug.status_text}"
-                        ></span>In Review</option>
-                    </select>
-                  </div>
-                </li>
-              </py:for>
-              </ul>
-            </py:when>
-            <py:otherwise>
-              <py:if test="loginid is not None">
-                <h2>Current Status
-                  <span class="subhead" py:if="userposts[0].postdate is not None">
-                    - Posted on ${userposts[0].postdate.isoformat()}
-                  </span>
-                </h2>
-                ${postdetail(userposts[0], showuser=False, showdate=False)}
-              </py:if>
-            </py:otherwise>
-          </py:choose>
-        </div>
-
-        <iframe id="previewFrame" name="previewFrame" class="hidden fullwidth"/>
-        <div id="previewOuter" class="hidden fullwidth bordered">
-          <h4>Preview:</h4>
-          <div id="previewInner" />
-        </div>
-      </div>
-      <div class="status col2">
-        <div class="bordered">
+      <div class="status col1">
+        <div>
           <div class="right-note"><a href="${genlink('markup')}" target="markup">Markdown Details</a></div>
           <py:choose>
             <py:when test="'firefox' in team">
@@ -222,10 +174,60 @@ import json
                  type="hidden" name="isedit" value="1"/>
         </div>
       </div>
+      <div class="divider"></div>
+      <div class="col2">
+        <div>
+          <py:choose>
+            <py:when test="'firefox' in team">
+              <div class="header none" py:if="not bugs">No bugs.</div>
+              <h4 class="header" py:if="bugs" >Current bugs you have committed to in
+              this iteration.</h4>
+              <ul>
+              <py:for each="bug in bugs">
+                <li><div class="bug"><a href="https://bugzilla.mozilla.org/show_bug.cgi?id=${bug.id}"
+                  >Bug ${bug.id}</a> - ${bug.summary}</div>
+                  <div class="bugProgress">
+                    <select name="bug${bug.id}">
+                      <option value="notstarted"
+                        selected="${'selected' if bug.status == 'notstarted' else ''}"><span
+                        class="glyphicon glyphicon-remove status-notstarted" title="${bug.status_text}"
+                        ></span>Not Started</option>
+                      <option value="inprogress"
+                        selected="${'selected' if bug.status == 'inprogress' else ''}"><span
+                        class="glyphicon glyphicon-refresh status-inprogress" title="${bug.status_text}"
+                        ></span>In Progress</option>
+                      <option value="inreview"
+                        selected="${'selected' if bug.status == 'inreview' else ''}"><span
+                        class="glyphicon glyphicon-ok status-inreview" title="${bug.status_text}"
+                        ></span>In Review</option>
+                    </select>
+                  </div>
+                </li>
+              </py:for>
+              </ul>
+            </py:when>
+            <py:otherwise>
+              <py:if test="loginid is not None">
+                <h2>Current Status
+                  <span class="subhead" py:if="userposts[0].postdate is not None">
+                    ${userposts[0].postdate.isoformat()}
+                  </span>
+                </h2>
+                ${postdetail(userposts[0], showuser=False, showdate=False)}
+              </py:if>
+            </py:otherwise>
+          </py:choose>
+        </div>
 
-      <br clear="both"/>
-      <input type="submit" value="Submit"/>
-      <input type="button" value="Preview" onclick="doPreview()"/>
+        <iframe id="previewFrame" name="previewFrame" class="hidden fullwidth"/>
+        <div id="previewOuter" class="hidden fullwidth">
+          <h4>Preview:</h4>
+          <div id="previewInner" />
+        </div>
+      </div>
     </div>
+    <input type="submit" value="Submit" class="btn btn-default btn-xs"/>
+    <input type="button" value="Preview" onclick="doPreview()" class="btn btn-default btn-xs"/>
+    <input type="button" id="hide_button" value="Hide" onclick="doHide()" class="btn btn-default btn-xs"/>
   </form>
 </div>

@@ -40,15 +40,17 @@ body {
   }
 
   .col1 {
-    float: left;
-    width: 50%;
-    padding-right: 0.5em;
+    flex: 1;
+  }
+
+  .bugs .divider {
+    width 1%;
+    margin: 0.5em;
+    border-left: 1px solid #EEE;
   }
 
   .col2 {
-    padding-left: 0.5em;
-    display: inline-block;
-    width: 50%;
+    flex: 1;
   }
 
   .sidebar {
@@ -157,6 +159,10 @@ ol.bordered > li {
   margin-left: 52px;
 }
 
+#previewInner .postdetail {
+  border-bottom: none;
+}
+
 .postdetail {
   border-bottom: 1px solid #CCC;
 }
@@ -212,22 +218,40 @@ img {
 
 .bugpost {
   margin: 1.5em auto;
-  background-color: #FFF2D6;
+  background-color: #428BCA;
+  color: #EEE;
   border: none;
+}
+
+.bugpost select,
+.bugpost textarea,
+.bugpost a,
+.bugpost .btn {
+  background-color: #428BCA;
+  color: #EEE;
+}
+
+.bugpost a {
+  text-decoration: underline;
+}
+
+.bugpost textarea {
+  background-color: #EEE;
+  color: #333;
+}
+
+.bugheader {
+  display: none;
 }
 
 .bugs {
   font-size: 12px;
+  display: flex;
 }
 
 .bugs .summary {
-  color: #666666;
   font-size: smaller;
   margin-bottom: 0.5em;
-}
-
-.bugs .header {
-  color: #333333;
 }
 
 .bugs h3{
@@ -255,8 +279,8 @@ img {
   flex: 1;
 }
 
-.bugs input[type="button"],
-.bugs input[type="submit"] {
+.bugpost input[type="button"],
+.bugpost input[type="submit"] {
   float: right;
 }
 
@@ -274,7 +298,6 @@ textarea {
 
 .right-note {
   float: right;
-  color: #444;
   font-size: smaller;
 }
 
