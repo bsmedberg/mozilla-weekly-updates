@@ -12,11 +12,10 @@ body {
   padding: 0;
 }
 
-#header {
-  text-align: center;
-  background-color: #CCC;
-  padding-top: 1px;
-  padding-bottom: 3px
+.header .dates {
+  padding-right: 10px;
+  margin-right: 10px;
+  border-right: 1px solid #EEE;
 }
 
 #content {

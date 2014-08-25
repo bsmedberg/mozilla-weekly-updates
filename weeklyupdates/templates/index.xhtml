@@ -11,15 +11,24 @@
           href="${genlink('user', loginid, 'teamposts', 'feed')}"
           type="application/atom+xml" rel="alternate" title="My Team Posts"/>
   </head>
-  <body class="2col">
+  <body class="2col container">
     <py:if test="loginid is not None">
       ${editpost(todaypost)}
     </py:if>
     <div class="sidebar">
-      <py:if test="loginid is None">
-        <h4>Login</h4>
-        ${loginform()}
-      </py:if>
+      <py:choose test="loginid">
+        <py:when test="None">
+          <h4>Login</h4>
+          ${loginform()}
+        </py:when>
+        <py:otherwise>
+          <h4>User Info</h4>
+          <ul>
+            <li><a href="${genlink('preferences')}">Settings</a></li>
+	          <li><a href="#" onclick="doLogout(); return false;">Log Out</a></li>
+          </ul>
+        </py:otherwise>
+      </py:choose>
 
       <h4>All Projects</h4>
       <ul>

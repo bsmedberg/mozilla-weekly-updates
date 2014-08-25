@@ -19,17 +19,16 @@ import json
   </head>
 
   <body py:match="body" class="normalcols" py:attrs="select('@*')">
-    <div id="header">
-      <a href="${genlink('')}">Mozilla Status Board</a> |
-      <py:choose test="loginid">
-        <py:when test="None">
-	  <a href="#" onclick="doLogin(); return false;">Log In</a>
-        </py:when>
-        <py:otherwise>
-          ${loginid}: <a href="${genlink('preferences')}">Settings</a> |
-	  <a href="#" onclick="doLogout(); return false;">Log Out</a>
-        </py:otherwise>
-      </py:choose>
+    <div class="header">
+      <h3><a href="${genlink('')}">Mozilla Status Board</a>
+        <py:if test="loginid is not None">
+          <span class="pull-right small text-muted hidden-xs">${loginid}</span>
+        </py:if>
+        <py:if test="'firefox' in team">
+          <span class="pull-right small text-muted hidden-xs dates">${daysleft}
+            ${'day' if daysleft==1 else 'days'} remaining in iteration ${iteration}</span>
+        </py:if>
+      </h3>
     </div>
     <div id="content">
     ${select("*|text()")}
@@ -120,10 +119,6 @@ import json
 	onsubmit="clearPreview()">
 
     <div class="fullwidth bugs">
-      <py:if test="'firefox' in team">
-        <div class="summary">${daysleft} ${'day' if daysleft==1 else 'days'}
-          remaining in iteration ${iteration}.</div>
-      </py:if>
       <div class="col1">
         <div class="bordered">
           <py:choose>
