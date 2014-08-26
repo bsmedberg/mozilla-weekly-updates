@@ -39,18 +39,16 @@ body {
     -webkit-column-gap: 1em;
   }
 
-  .col1 {
+  .col1,
+  .col2 {
     flex: 1;
+    min-width: 40%;
   }
 
   .bugs .divider {
     width 1%;
-    margin: 0.5em;
+    margin: 1em;
     border-left: 1px solid #EEE;
-  }
-
-  .col2 {
-    flex: 1;
   }
 
   .sidebar {
@@ -221,6 +219,7 @@ img {
   background-color: #428BCA;
   color: #EEE;
   border: none;
+  padding: 1em;
 }
 
 .bugpost select,
@@ -261,7 +260,6 @@ img {
 .bugs ul {
   list-style: none;
   padding-left: 0px;
-  font-size: 75%;
   margin: 0px;
 }
 
@@ -282,6 +280,11 @@ img {
 .bugpost input[type="button"],
 .bugpost input[type="submit"] {
   float: right;
+  margin-left: 0.5em;
+}
+
+#hide_button {
+  margin-right: 1.5em;
 }
 
 textarea {
