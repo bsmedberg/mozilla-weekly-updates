@@ -224,13 +224,14 @@ img {
 
 .bugpost select,
 .bugpost textarea,
-.bugpost a,
-.bugpost .btn {
+.bugpost #previewOuter a,
+.bugpost .bug a {
   background-color: #428BCA;
   color: #EEE;
 }
 
-.bugpost a {
+.bugpost #previewOuter a,
+.bugpost .bug a {
   text-decoration: underline;
 }
 
@@ -253,17 +254,17 @@ img {
   margin-bottom: 0.5em;
 }
 
-.bugs h3{
+.bugs h3 {
   margin-top: 0px;
 }
 
-.bugs ul {
+.buglist {
   list-style: none;
   padding-left: 0px;
   margin: 0px;
 }
 
-.bugs li {
+.buglist > li {
   display: flex;
   justify-content: space-between;
   flex-wrap: nowrap;

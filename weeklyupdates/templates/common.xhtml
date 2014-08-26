@@ -182,12 +182,42 @@ import json
               <div class="header none" py:if="not bugs">No bugs.</div>
               <h4 class="header" py:if="bugs" >Current bugs you have committed to in
               this iteration.</h4>
-              <ul>
+              <ul class="buglist">
               <py:for each="bug in bugs">
                 <li><div class="bug"><a href="https://bugzilla.mozilla.org/show_bug.cgi?id=${bug.id}"
                   >Bug ${bug.id}</a> - ${bug.summary}</div>
                   <div class="bugProgress">
-                    <select name="bug${bug.id}">
+                    <div class="dropdown">
+                      <button class="btn btn-default btn-xs dropdown-toggle" type="button"
+                        id="bug${bug.id}" data-toggle="dropdown">
+                        <py:choose test="bug.status"
+                          ><py:when test="'notstarted'"><span class="glyphicon glyphicon-remove status-notstarted"
+                            title="${bug.status_text}"></span></py:when
+                          ><py:when test="'inprogress'"><span class="glyphicon glyphicon-refresh status-inprogress"
+                            title="${bug.status_text}"></span></py:when
+                          ><py:when test="'inreview'"><span class="glyphicon glyphicon-ok status-inreview"
+                            title="${bug.status_text}"></span></py:when
+                          ><py:otherwise><span class="glyphicon glyphicon-question-sign status-unknown"
+                            title="${bug.status_text}"></span></py:otherwise
+                        ></py:choose>
+                        ${bug.status_text}<span class="caret"></span>
+                      </button>
+                      <ul class="dropdown-menu" role="menu" aria-labelledby="bug${bug.id}">
+                        <li role="presentation"><a role="menuitem" tabindex="-1" href="#" status="notstarted"
+                          onclick="doUpdateBugStatus(event)"><span title="${bug.status_text}"
+                          class="glyphicon glyphicon-remove status-notstarted"></span>
+                          Not Started</a></li>
+                        <li role="presentation"><a role="menuitem" tabindex="-1" href="#" status="inprogress"
+                          onclick="doUpdateBugStatus(event)"><span title="${bug.status_text}"
+                          class="glyphicon glyphicon-refresh status-inprogress"></span>
+                          In Progress</a></li>
+                        <li role="presentation"><a role="menuitem" tabindex="-1" href="#" status="inreview"
+                          onclick="doUpdateBugStatus(event)"><span title="${bug.status_text}"
+                          class="glyphicon glyphicon-ok status-inreview"></span>
+                          In Review</a></li>
+                      </ul>
+                    </div>
+                    <select name="bug${bug.id}" class="hidden">
                       <option value="notstarted"
                         selected="${'selected' if bug.status == 'notstarted' else ''}"><span
                         class="glyphicon glyphicon-remove status-notstarted" title="${bug.status_text}"

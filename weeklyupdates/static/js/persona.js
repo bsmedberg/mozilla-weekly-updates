@@ -63,3 +63,20 @@ function doHide()
   $('.bugs').slideToggle();
 }
 
+function doUpdateBugStatus(event)
+{
+  var target = $(event.target);
+  var button = target.closest('.dropdown').children('button');
+  var bug = button.attr('id');
+  var bugStatus = target.attr('status');
+  var select = $('select[name="' + bug + '"]');
+  var option = select.children('option[value="' + bugStatus + '"]');
+
+  button.empty()
+    .append(target.contents().clone())
+    .append('<span class="caret"></span>');
+
+  select.children('option').removeAttr('selected');
+  option.attr('selected', '');
+}
+
