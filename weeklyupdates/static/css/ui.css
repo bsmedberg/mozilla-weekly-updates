@@ -169,7 +169,6 @@ ol.bordered > li {
   border-bottom: 1px solid #CCC;
   padding-top: 2px;
   margin-top: 2px;
-  font-size: smaller;
 }
 
 .postlistdetail:last-child .postdata {
@@ -245,7 +244,7 @@ img {
 }
 
 .bugs {
-  font-size: 12px;
+  font-size: small;
   display: flex;
 }
 
