@@ -350,7 +350,8 @@ def get_current_iteration():
             start, end = (strptime(y + " " + this_year, "%A %B %d %Y").date() for y in i[1].split(' - '))
             if start <= today <= end:
                 current_iteration = iteration
-                daysleft = (end - today).days + 1 # We can work on the last day.
+                daygenerator = (today + datetime.timedelta(x + 1) for x in xrange((end - today).days + 1))
+                daysleft = sum(day.weekday() < 5 for day in daygenerator)
     return (current_iteration, daysleft)
 
 def save_bugstatus(cur, bugid, userid, postdate, value):
