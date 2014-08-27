@@ -204,7 +204,7 @@ class Bug(object):
 
 def create_post_with_bugs(data, bugs=None):
     post = Post(data)
-    if bugs:
+    if bugs != None:
         post.populatebugs(bugs)
     else:
         cur = get_cursor()
