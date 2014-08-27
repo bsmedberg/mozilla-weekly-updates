@@ -77,6 +77,7 @@ function doUpdateBugStatus(event)
     .append('<span class="caret"></span>');
 
   select.children('option').removeAttr('selected');
+  option[0].selected = true;
   option.attr('selected', '');
 }
 
