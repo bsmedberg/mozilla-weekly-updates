@@ -192,26 +192,30 @@ statusbugtext = {
 statusbugs = dict((v,k) for k, v in bugstatuses.iteritems())
 
 class Bug(object):
-    def __init__(self, record):
-        self.summary, self.id, self.statusnum = record
+    def __init__(self, summary, id, statusnum):
+        self.summary = summary
+        self.id = id
+        self.statusnum = statusnum
         self.status_text = statusbugtext.get(self.statusnum, 'Unknown')
         self.status = statusbugs.get(self.statusnum, 'unknown')
 
     def __str__(self):
         return "%s - %s\n  %d %s" % (self.id, self.summary, self.status, self.status_text)
 
-def create_post_with_bugs(data):
+def create_post_with_bugs(data, bugs=None):
     post = Post(data)
-    cur = get_cursor()
-    cur.execute('''SELECT titles.title, bug.bugid, bug.status
-                   FROM bugtitles AS titles, postbugs AS bug
-                   WHERE bug.userid = ?
-                     AND bug.postdate = ?
-                     AND bug.bugid = titles.bugid''',
-      (post.userid, post.postdate.toordinal()))
-    post.populatebugs([Bug(record) for record in cur.fetchall()])
+    if bugs:
+        post.populatebugs(bugs)
+    else:
+        cur = get_cursor()
+        cur.execute('''SELECT titles.title, bug.bugid, bug.status
+                       FROM bugtitles AS titles, postbugs AS bug
+                       WHERE bug.userid = ?
+                         AND bug.postdate = ?
+                         AND bug.bugid = titles.bugid''',
+                    (post.userid, post.postdate.toordinal()))
+        post.populatebugs([Bug(title, id, statusnum) for title, id, statusnum in cur.fetchall()])
     return post
-
 
 def get_userprojects(userid):
     cur = get_cursor()
@@ -354,22 +358,21 @@ def get_current_iteration():
                 daysleft = sum(day.weekday() < 5 for day in daygenerator)
     return (current_iteration, daysleft)
 
-def save_bugstatus(cur, bugid, userid, postdate, value):
+def save_bugstatus(cur, loginid, bug, postdate):
     # bugid is the bug id as a string.
     # status is "notstarted", "inprogress", or "inreview"
-    status = bugstatuses.get(value, 0)
     rows = cur.execute('''SELECT status FROM postbugs WHERE bugid = ? AND userid = ? AND postdate = ?''',
-                       (bugid, userid, postdate))
+                       (bug.id, userid, postdate))
     if rows:
       updated = cur.execute('''UPDATE postbugs
                                SET status = ?
                                WHERE bugid = ? AND userid = ? AND postdate = ?''',
-                            (status, bugid, userid, postdate))
+                            (bug.statusnum, bug.id, userid, postdate))
     else:
       updated = cur.execute('''INSERT INTO postbugs
                                (bugid, userid, postdate, status)
                                VALUES (?, ?, ?, ?)''',
-                          (bugid, userid, postdate, status))
+                            (bug.id, userid, postdate, bug.statusnum))
 
 def get_bugstatus(cur, userid, bugids):
     if not len(bugids):
@@ -421,4 +424,4 @@ def get_currentbugs(userid, iteration):
             updated = cur.execute('''UPDATE bugtitles SET title = ? WHERE bugid = ?''',
                                 (bug['summary'], bug['id']))
     statuses = get_bugstatus(cur, userid, [bug['id'] for bug in bugData])
-    return [Bug((bug['summary'], bug['id'], statuses.get(str(bug['id']), 0))) for bug in bugData]
+    return [Bug(bug['summary'], bug['id'], statuses.get(str(bug['id']), 0)) for bug in bugData]

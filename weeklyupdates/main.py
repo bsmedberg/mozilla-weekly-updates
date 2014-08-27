@@ -4,7 +4,6 @@ from genshi.template import TemplateLoader
 import re
 import util
 from auth import require_login, logged_in, logged_out
-from post import Post
 import model, mail
 import browserid
 
@@ -23,6 +22,20 @@ def renderatom(**kwargs):
     return t.generate(loginid=cherrypy.request.loginid,
                       feedtag=cherrypy.request.app.config['weeklyupdates']['feed.tag.domain'],
                       **kwargs).render('xml')
+
+def kwargs_to_buglist(kwargs):
+    bugs = []
+    # kwargs will contain {"bugNNNNN": "newstatus", "bugMMMMMM": "otherstatus"}
+    for key, value in kwargs.iteritems():
+        bug_key = bug_re.match(key)
+        if not bug_key:
+            continue
+        bugid = int(bug_key.group(1))
+        summary = kwargs.get("bug%d.summary" % (bugid,), "Unknown bug")
+        statusnum = model.bugstatuses.get(value, 0)
+        bug = model.Bug(summary, bugid, statusnum)
+        bugs.append(bug)
+    return bugs
 
 class Root(object):
     @model.requires_db
@@ -220,7 +233,8 @@ class Root(object):
 
         today = util.today().toordinal()
         now = util.now()
-        post = Post(('<preview>', today, now, completed.decode("utf-8"), planned.decode("utf-8"), tags.decode("utf-8")))
+        bugs = kwargs_to_buglist(kwargs)
+        post = model.create_post_with_bugs(('<preview>', today, now, completed.decode("utf-8"), planned.decode("utf-8"), tags.decode("utf-8")), bugs)
         return render('preview.xhtml', post=post)
 
     @require_login
@@ -244,6 +258,7 @@ class Root(object):
 
         today = util.today().toordinal()
         now = util.now()
+        bugs = kwargs_to_buglist(kwargs)
 
         if isedit:
             cur.execute('''UPDATE posts
@@ -263,19 +278,15 @@ class Root(object):
                            VALUES (?, ?, ?, ?, ?, ?)''',
                         (loginid, today, now, completed, planned, tags))
 
-        # kwargs will contain {"bugNNNNN": "newstatus", "bugMMMMMM": "otherstatus"}
-        for key, value in kwargs.iteritems():
-            bug_key = bug_re.match(key)
-            if not bug_key:
-                continue
-            model.save_bugstatus(cur, bug_key.group(1), loginid, today, value)
+            for bug in bugs:
+                model.save_bugstatus(cur, loginid, bug, today)
         allteam, sendnow = model.get_userteam_emails(loginid)
         if len(sendnow):
             mail.sendpost(email, allteam, sendnow,
-                          Post((loginid, today, now,
+                          model.create_post_with_bugs((loginid, today, now,
                                 completed and completed.decode("utf-8"),
                                 planned and planned.decode("utf-8"),
-                                tags and tags.decode("utf-8"))))
+                                tags and tags.decode("utf-8")), bugs))
 
         raise cherrypy.HTTPRedirect(cherrypy.url('/'))
 
