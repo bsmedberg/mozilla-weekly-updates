@@ -127,6 +127,7 @@ import json
                 <py:for each="bug in bugs">
                   <li><div class="bug"><a href="https://bugzilla.mozilla.org/show_bug.cgi?id=${bug.id}"
                     >Bug ${bug.id}</a> - ${bug.summary}</div>
+		    <input type="hidden" name="bug${bug.id}.summary" value="${bug.summary}"/>
                     <div class="progress">
                       <input type="radio" name="bug${bug.id}" value="notstarted"
                         checked="${'checked' if bug.status == 'notstarted' else ''}">Not Started</input>
