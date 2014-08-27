@@ -320,10 +320,11 @@ class Root(object):
         posts = model.get_project_posts(projectname)
         late = model.get_project_late(projectname)
         iteration, daysleft = model.get_current_iteration()
+        projects = model.get_projects()
 
         return render('project.xhtml', projectname=projectname, users=users,
                       posts=posts, late=late, team=[projectname], iteration=iteration,
-                      daysleft=daysleft)
+                      daysleft=daysleft, projects=projects)
 
     @model.requires_db
     def projectfeed(self, projectname):

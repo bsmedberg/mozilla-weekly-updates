@@ -11,10 +11,7 @@
           href="${genlink('user', loginid, 'teamposts', 'feed')}"
           type="application/atom+xml" rel="alternate" title="My Team Posts"/>
   </head>
-  <body class="2col container">
-    <py:if test="loginid is not None">
-      ${editpost(todaypost)}
-    </py:if>
+  <body class="container">
     <div class="sidebar">
       <py:choose test="loginid">
         <py:when test="None">
@@ -39,6 +36,7 @@
         <h4 class="standalone"><a href="${genlink('posts')}">Recent Posts (All Users)</a></h4>
       </py:if>
     </div>
+
     <div class="maincontent">
       <py:if test="loginid is not None">
         <py:if test="'firefox' in team">

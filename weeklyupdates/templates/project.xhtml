@@ -9,27 +9,50 @@
     <link href="${genlink('project', projectname, 'feed')}" type="application/atom+xml"
           rel="alternate" title="All project posts"/>
   </head>
-  <body class="2col">
-    <h1>Project: ${projectname} <a href="${genlink('project', projectname, 'feed')}" class="feedlink"/></h1>
+  <body class="container">
+    <div class="sidebar">
+      <py:choose test="loginid">
+        <py:when test="None">
+          <h4>Login</h4>
+          ${loginform()}
+        </py:when>
+        <py:otherwise>
+          <h4>User Info</h4>
+          <ul>
+            <li><a href="${genlink('preferences')}">Settings</a></li>
+	          <li><a href="#" onclick="doLogout(); return false;">Log Out</a></li>
+          </ul>
+        </py:otherwise>
+      </py:choose>
 
-    <div id="col1">
-    ${postlist(posts)}
-    </div>
+      <h4>All Projects</h4>
+      <ul>
+        <li py:for="project in projects"><a href="${genlink('project', project)}">${project}</a></li>
+      </ul>
 
-    <div id="col2">
-      <h2>Team Members:</h2>
-      <ul class="bordered">
+      <py:if test="loginid is not None">
+        <h4 class="standalone"><a href="${genlink('posts')}">Recent Posts (All Users)</a></h4>
+      </py:if>
+
+      <h4>Team Members:</h4>
+      <ul>
         <li py:for="user in users"><a href="${genlink('user', user)}">${user}</a></li>
       </ul>
 
-      <h2>Who's <span title="Who hasn't posted an update in the last week?">Late?</span></h2>
+      <h4>Who's <span title="Who hasn't posted an update in the last week?">Late?</span></h4>
       <p py:if="not len(late)"><em>Everybody's up to date!</em></p>
-      <ul py:if="len(late)" class="bordered">
+      <ul py:if="len(late)">
         <li py:for="userid, lastpostdate in late"><a href="${genlink('user', userid)}">${userid}</a>:
           <em py:if="lastpostdate is None">Never posted</em>
           <em py:if="lastpostdate">Last posted on ${lastpostdate.isoformat()}</em>
         </li>
       </ul>
+    </div>
+
+    <div class="maincontent">
+      <h4>Project: ${projectname} <a href="${genlink('project', projectname, 'feed')}" class="feedlink"/></h4>
+
+      ${postlist(posts)}
     </div>
 
   </body>
