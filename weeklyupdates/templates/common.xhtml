@@ -165,10 +165,7 @@ import json
             </py:otherwise>
           </py:choose>
           <p><textarea id="tags" name="tags" class="fullwidth"
-            rows="${post.tags and post.tags.count('\n') + 1 or len(bugs)}"><py:choose
-            ><py:when test="post.tags">${post.tags}</py:when
-            ><py:otherwise>${"\n".join("Bug %d - " % (bug.id,) for bug in bugs)}</py:otherwise
-          ></py:choose></textarea></p>
+            rows="${post.tags and post.tags.count('\n') + 1 or len(bugs)}">${post.tags}</textarea></p>
 
           <input py:if="post.postdate is not None"
                  type="hidden" name="isedit" value="1"/>

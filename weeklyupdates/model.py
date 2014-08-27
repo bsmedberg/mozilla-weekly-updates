@@ -204,7 +204,7 @@ def create_post_with_bugs(data):
     post = Post(data)
     cur = get_cursor()
     cur.execute('''SELECT titles.title, bug.bugid, bug.status
-                   FROM bugtitles AS titles, bugs AS bug
+                   FROM bugtitles AS titles, postbugs AS bug
                    WHERE bug.userid = ?
                      AND bug.postdate = ?
                      AND bug.bugid = titles.bugid''',
@@ -358,15 +358,15 @@ def save_bugstatus(cur, bugid, userid, postdate, value):
     # bugid is the bug id as a string.
     # status is "notstarted", "inprogress", or "inreview"
     status = bugstatuses.get(value, 0)
-    rows = cur.execute('''SELECT status FROM bugs WHERE bugid = ? AND userid = ? AND postdate = ?''',
+    rows = cur.execute('''SELECT status FROM postbugs WHERE bugid = ? AND userid = ? AND postdate = ?''',
                        (bugid, userid, postdate))
     if rows:
-      updated = cur.execute('''UPDATE bugs
+      updated = cur.execute('''UPDATE postbugs
                                SET status = ?
                                WHERE bugid = ? AND userid = ? AND postdate = ?''',
                             (status, bugid, userid, postdate))
     else:
-      updated = cur.execute('''INSERT INTO bugs
+      updated = cur.execute('''INSERT INTO postbugs
                                (bugid, userid, postdate, status)
                                VALUES (?, ?, ?, ?)''',
                           (bugid, userid, postdate, status))
@@ -374,7 +374,7 @@ def save_bugstatus(cur, bugid, userid, postdate, value):
 def get_bugstatus(cur, userid, bugids):
     if not len(bugids):
       return {}
-    cur.execute('''SELECT bugid,status FROM bugs WHERE userid = ? AND bugid in ?''',
+    cur.execute('''SELECT bugid, status FROM postbugs WHERE userid = ? AND bugid in ?''',
                 (userid, bugids))
 
     rv = {}
