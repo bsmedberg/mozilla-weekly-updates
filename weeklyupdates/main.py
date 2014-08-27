@@ -89,8 +89,8 @@ class Root(object):
                         (loginid,))
             if cur.fetchone() is None:
                 cur.execute('''INSERT INTO users
-                               (userid, email) VALUES (?, ?)''',
-                            (loginid, loginid))
+                               (userid) VALUES (?)''',
+                            (loginid,))
                 logged_in(loginid)
                 raise cherrypy.HTTPRedirect(cherrypy.url('/preferences'))
             logged_in(loginid)
@@ -172,7 +172,7 @@ class Root(object):
                 bugmail = None
 
             email = kwargs.pop('email')
-            if email == '':
+            if email == '' or email == loginid:
                 email = None
 
             reminderday = kwargs.pop('reminderday')
