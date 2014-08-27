@@ -14,14 +14,14 @@ loader = TemplateLoader(os.path.join(thisdir, 'templates'), auto_reload=True)
 def render(name, **kwargs):
     t = loader.load(name)
     return t.generate(loginid=cherrypy.request.loginid,
-                      **kwargs).render('html')
+                      **kwargs).render('html').encode('utf-8')
 
 def renderatom(**kwargs):
     t = loader.load('feed.xml')
     cherrypy.response.headers['Content-Type'] = 'application/atom+xml'
     return t.generate(loginid=cherrypy.request.loginid,
                       feedtag=cherrypy.request.app.config['weeklyupdates']['feed.tag.domain'],
-                      **kwargs).render('xml')
+                      **kwargs).render('xml').encode('utf-8')
 
 def kwargs_to_buglist(kwargs):
     bugs = []

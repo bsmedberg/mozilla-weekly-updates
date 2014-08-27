@@ -29,6 +29,13 @@ import datetime
     </author>
     <content type="xhtml">
       <div xmlns="http://www.w3.org/1999/xhtml" class="postdata">
+          <div class="newlines" py:if="post.bugs">
+            <h4 class="posthead">Bugs:</h4>
+            <ul><py:for each="bug in post.bugs">
+              <li><a title="${bug.summary}" href="https://bugzilla.mozilla.org/show_bug.cgi?id=${bug.id}"
+                >Bug ${bug.id}</a> - ${bug.summary} (${bug.status_text})</li>
+            </py:for></ul>
+          </div>
           <div class="completed" py:if="post.completed is not None">
             <h4 class="posthead">Done:</h4> ${post.getcompleted()}
           </div>
