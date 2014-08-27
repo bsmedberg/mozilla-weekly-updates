@@ -39,12 +39,11 @@ CREATE TABLE IF NOT EXISTS posts
 CREATE TABLE IF NOT EXISTS bugs
 (
   bugid INTEGER NOT NULL,
-  userid VARCHAR(80) NOT NULL,
+  userid VARCHAR(255) NOT NULL,
   postdate INTEGER NOT NULL,
-  status TINYINT NULL,
+  status TINYINT NOT NULL,
   CONSTRAINT bugs_pkey PRIMARY KEY (bugid, userid, postdate),
   CONSTRAINT bugs_userid_fkey FOREIGN KEY (userid, postdate) REFERENCES posts (userid, postdate)
-  -- CONSTRAINT bugs_postdate_fkey FOREIGN KEY (postdate) REFERENCES posts (postdate)
 ) ENGINE=InnoDB;
 
 CREATE TABLE IF NOT EXISTS bugtitles
