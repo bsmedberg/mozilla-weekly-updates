@@ -19,9 +19,12 @@ def render(name, **kwargs):
 def renderatom(**kwargs):
     t = loader.load('feed.xml')
     cherrypy.response.headers['Content-Type'] = 'application/atom+xml'
-    return t.generate(loginid=cherrypy.request.loginid,
+    rv = t.generate(loginid=cherrypy.request.loginid,
                       feedtag=cherrypy.request.app.config['weeklyupdates']['feed.tag.domain'],
                       **kwargs).render('xml')
+    if type(rv) == unicode:
+      rv = rv.encode('utf-8')
+    return rv
 
 def kwargs_to_buglist(kwargs):
     bugs = []
