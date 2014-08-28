@@ -152,9 +152,10 @@ class Root(object):
     def userteamposts(self, userid):
         teamposts = model.get_teamposts(userid)
         team = model.get_userteam(userid)
+        projects = model.get_projects()
 
-        return render('teamposts.xhtml', userid=userid,
-                      teamposts=teamposts, team=team)
+        return render('teamposts.xhtml', userid=userid, team=team,
+                      teamposts=teamposts, projects=projects)
 
     @model.requires_db
     def userteampostsfeed(self, userid):
