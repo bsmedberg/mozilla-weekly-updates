@@ -290,8 +290,8 @@ class Root(object):
                            VALUES (?, ?, ?, ?, ?, ?)''',
                         (loginid, today, now, completed, planned, tags))
 
-            for bug in bugs:
-                model.save_bugstatus(cur, loginid, bug, today)
+        for bug in bugs:
+            model.save_bugstatus(cur, loginid, bug, today)
         allteam, sendnow = model.get_userteam_emails(loginid)
         if completed and type(completed) == str:
             completed = completed.decode("utf-8")
