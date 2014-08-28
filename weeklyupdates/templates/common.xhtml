@@ -24,10 +24,8 @@ import json
         <py:if test="loginid is not None">
           <span class="pull-right small text-muted hidden-xs">${loginid}</span>
         </py:if>
-        <py:if test="'firefox' in team">
-          <span class="pull-right small text-muted hidden-xs dates">${daysleft} work
-            ${'day' if daysleft==1 else 'days'} remaining in iteration ${iteration}</span>
-        </py:if>
+	<span class="pull-right small text-muted hidden-xs dates">${daysleft} work
+	${'day' if daysleft==1 else 'days'} remaining in iteration ${iteration}</span>
       </h3>
     </div>
     <div id="content">
@@ -139,33 +137,28 @@ import json
               <h4>1. What did you do yesterday?</h4>
             </py:when>
             <py:otherwise>
-              <h4>Done</h4>
+              <h4>1. What did you get done?</h4>
             </py:otherwise>
           </py:choose>
           <p><textarea id="completed" name="completed" class="fullwidth"
-            rows="${post.completed and post.completed.count('\n') + 1 or 1}">${post.completed}</textarea></p>
+            rows="${post.completed and post.completed.count('\n') + 1 or 3}">${post.completed}</textarea></p>
 
           <py:choose>
             <py:when test="'firefox' in team">
               <h4>2. What will you do today?</h4>
             </py:when>
             <py:otherwise>
-              <h4>Next</h4>
+              <h4>2. What are you going to do next?</h4>
             </py:otherwise>
           </py:choose>
           <p><textarea id="planned" name="planned" class="fullwidth"
-            rows="${post.planned and post.planned.count('\n') + 1 or 1}">${post.planned}</textarea></p>
+            rows="${post.planned and post.planned.count('\n') + 1 or 3}">${post.planned}</textarea></p>
 
           <py:choose>
-            <py:when test="'firefox' in team">
-              <h4>3. Are you blocked on anything?  What?</h4>
-            </py:when>
-            <py:otherwise>
-              <h4>Coordination</h4>
-            </py:otherwise>
+	    <h4>3. List anything that's blocking your work.</h4>
           </py:choose>
           <p><textarea id="tags" name="tags" class="fullwidth"
-            rows="${post.tags and post.tags.count('\n') + 1 or len(bugs)}">${post.tags}</textarea></p>
+            rows="${post.tags and post.tags.count('\n') + 1 or 2}">${post.tags}</textarea></p>
 
           <input py:if="post.postdate is not None"
                  type="hidden" name="isedit" value="1"/>
