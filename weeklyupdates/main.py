@@ -138,7 +138,8 @@ class Root(object):
         if not len(posts):
             raise cherrypy.HTTPError(404, "No posts found")
 
-        return render('userposts.xhtml', userid=userid, posts=posts, team=[])
+        projects = model.get_userprojects(userid)
+        return render('userposts.xhtml', userid=userid, posts=posts, team=[], projects=projects)
 
     @model.requires_db
     def userpostsfeed(self, userid):

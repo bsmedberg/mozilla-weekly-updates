@@ -11,35 +11,62 @@
     <link href="${genlink('user', userid, 'teamposts', 'feed')}" type="application/atom+xml"
           rel="alternate" title="Team posts"/>
   </head>
-  <body>
-    <h1>${userid}</h1>
+  <body class="container">
+    <div class="sidebar">
+      <py:choose test="loginid">
+        <py:when test="None">
+          <h4>Login</h4>
+          ${loginform()}
+        </py:when>
+        <py:otherwise>
+          <h4>User Info</h4>
+          <ul>
+            <li><a href="${genlink('preferences')}">Settings</a></li>
+	          <li><a href="#" onclick="doLogout(); return false;">Log Out</a></li>
+          </ul>
+        </py:otherwise>
+      </py:choose>
 
-    <div class="keeptogether">
-      <h2>Current Status
-        <span class="subhead" py:if="userposts[0].postdate is not None">
-          - ${userposts[0].postdate.isoformat()}
-        </span>
-      </h2>
-      ${postdetail(userposts[0], showuser=False, showdate=False)}
-    </div>
-
-    <h2><a href="${genlink('user', userid, 'posts')}">Older Posts</a>
-      <a href="${genlink('user', userid, 'posts/feed')}" class="feedlink"/>
-    </h2>
-
-    <div class="keeptogether">
-      <h2>Member of Projects</h2>
+      <h4>All Projects</h4>
       <ul>
-        <li py:for="project in projects"><a href="${genlink('project/%s' % project)}">${project}</a></li>
+        <li py:for="project in projects"><a href="${genlink('project', project)}">${project}</a></li>
       </ul>
+
+      <py:if test="loginid is not None">
+        <h4 class="standalone"><a href="${genlink('posts')}">Recent Posts (All Users)</a></h4>
+      </py:if>
     </div>
 
-    <div class="keeptogether">
-      <h2><a href="${genlink('user', userid, 'teamposts')}">Team Posts</a>
-        <a href="${genlink('user', userid, 'teamposts', 'feed')}" class="feedlink"/>
-      </h2>
+    <div class="maincontent">
+      <h3>${userid}</h3>
 
-      ${postlist(teamposts)}
+      <div class="keeptogether">
+        <h4>Current Status
+          <span class="subhead" py:if="userposts[0].postdate is not None">
+            - ${userposts[0].postdate.isoformat()}
+          </span>
+        </h4>
+        ${postdetail(userposts[0], showuser=False, showdate=False)}
+      </div>
+
+      <h4><a href="${genlink('user', userid, 'posts')}">Older Posts</a>
+        <a href="${genlink('user', userid, 'posts/feed')}" class="feedlink"/>
+      </h4>
+
+      <div class="keeptogether">
+        <h4>Member of Projects</h4>
+        <ul>
+          <li py:for="project in projects"><a href="${genlink('project/%s' % project)}">${project}</a></li>
+        </ul>
+      </div>
+
+      <div class="keeptogether">
+        <h4><a href="${genlink('user', userid, 'teamposts')}">Team Posts</a>
+          <a href="${genlink('user', userid, 'teamposts', 'feed')}" class="feedlink"/>
+        </h4>
+
+        ${postlist(teamposts)}
+      </div>
     </div>
   </body>
 </html>
