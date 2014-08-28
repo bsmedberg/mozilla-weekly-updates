@@ -79,7 +79,7 @@ import json
         </h4>
 
         <div class="postdata">
-          <div class="newlines" py:if="post.bugs">
+          <div py:if="post.bugs">
             <h4 class="posthead">Bugs:</h4>
             <p><py:for each="bug in post.bugs">
               <py:choose test="bug.status"
@@ -93,19 +93,19 @@ import json
                   title="${bug.status_text}"></span></py:otherwise
               ></py:choose
               ><a title="${bug.summary}" href="https://bugzilla.mozilla.org/show_bug.cgi?id=${bug.id}"
-                >Bug ${bug.id}</a> - ${bug.summary} (${bug.status_text})
+                >Bug ${bug.id}</a> - ${bug.summary} (${bug.status_text})<br/>
             </py:for></p>
           </div>
 
-          <div class="completed newlines" py:if="post.completed is not None">
+          <div class="completed" py:if="post.completed is not None">
             <h4 class="posthead">Done:</h4> ${post.getcompleted()}
           </div>
 
-          <div class="planned newlines" py:if="post.planned is not None">
+          <div class="planned" py:if="post.planned is not None">
             <h4 class="posthead">Next:</h4> ${post.getplanned()}
           </div>
 
-          <div class="tags newlines" py:if="post.tags is not None">
+          <div class="tags" py:if="post.tags is not None">
             <h4 class="posthead">Coordination:</h4> ${post.gettags()}
           </div>
         </div>
