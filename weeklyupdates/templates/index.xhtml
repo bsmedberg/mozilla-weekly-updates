@@ -12,6 +12,9 @@
           type="application/atom+xml" rel="alternate" title="My Team Posts"/>
   </head>
   <body class="container">
+    <py:if test="loginid is not None">
+      ${editpost(todaypost)}
+    </py:if>
     <div class="sidebar">
       <py:choose test="loginid">
         <py:when test="None">
