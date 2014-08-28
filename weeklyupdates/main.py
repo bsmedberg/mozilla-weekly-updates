@@ -12,6 +12,12 @@ bug_re = re.compile("^bug(\d+)$")
 
 loader = TemplateLoader(os.path.join(thisdir, 'templates'), auto_reload=True)
 def render(name, **kwargs):
+    if not "team" in kwargs:
+        kwargs["team"] = []
+    if not "daysleft" in kwargs:
+        kwargs["daysleft"] = "Unknown"
+    if not "iteration" in kwargs:
+        kwargs["iteration"] = "Unknown"
     t = loader.load(name)
     return t.generate(loginid=cherrypy.request.loginid,
                       **kwargs).render('html')
