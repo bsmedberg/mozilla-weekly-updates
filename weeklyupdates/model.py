@@ -358,7 +358,7 @@ def get_current_iteration():
                 daysleft = sum(day.weekday() < 5 for day in daygenerator)
     return (current_iteration, daysleft)
 
-def save_bugstatus(cur, loginid, bug, postdate):
+def save_bugstatus(cur, userid, bug, postdate):
     # bugid is the bug id as a string.
     # status is "notstarted", "inprogress", or "inreview"
     rows = cur.execute('''SELECT status FROM postbugs WHERE bugid = ? AND userid = ? AND postdate = ?''',

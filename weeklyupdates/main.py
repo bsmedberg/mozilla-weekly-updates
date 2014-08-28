@@ -14,14 +14,14 @@ loader = TemplateLoader(os.path.join(thisdir, 'templates'), auto_reload=True)
 def render(name, **kwargs):
     t = loader.load(name)
     return t.generate(loginid=cherrypy.request.loginid,
-                      **kwargs).render('html').encode('utf-8')
+                      **kwargs).render('html')
 
 def renderatom(**kwargs):
     t = loader.load('feed.xml')
     cherrypy.response.headers['Content-Type'] = 'application/atom+xml'
     return t.generate(loginid=cherrypy.request.loginid,
                       feedtag=cherrypy.request.app.config['weeklyupdates']['feed.tag.domain'],
-                      **kwargs).render('xml').encode('utf-8')
+                      **kwargs).render('xml')
 
 def kwargs_to_buglist(kwargs):
     bugs = []
@@ -235,7 +235,13 @@ class Root(object):
         today = util.today().toordinal()
         now = util.now()
         bugs = kwargs_to_buglist(kwargs)
-        post = model.create_post_with_bugs(('<preview>', today, now, completed.decode("utf-8"), planned.decode("utf-8"), tags.decode("utf-8")), bugs)
+        if type(completed) == str:
+            completed = completed.decode("utf-8")
+        if type(planned) == str:
+            planned = planned.decode("utf-8")
+        if type(tags) == str:
+            tags = tags.decode("utf-8")
+        post = model.create_post_with_bugs(('<preview>', today, now, completed, planned, tags), bugs)
         return render('preview.xhtml', post=post)
 
     @require_login
@@ -282,12 +288,16 @@ class Root(object):
             for bug in bugs:
                 model.save_bugstatus(cur, loginid, bug, today)
         allteam, sendnow = model.get_userteam_emails(loginid)
+        if completed and type(completed) == str:
+            completed = completed.decode("utf-8")
+        if planned and type(planned) == str:
+            planned = planned.decode("utf-8")
+        if tags and type(tags) == str:
+            tags = tags.decode("utf-8")
         if len(sendnow):
             mail.sendpost(email, allteam, sendnow,
                           model.create_post_with_bugs((loginid, today, now,
-                                completed and completed.decode("utf-8"),
-                                planned and planned.decode("utf-8"),
-                                tags and tags.decode("utf-8")), bugs))
+                                completed, planned, tags), bugs))
 
         raise cherrypy.HTTPRedirect(cherrypy.url('/'))
 

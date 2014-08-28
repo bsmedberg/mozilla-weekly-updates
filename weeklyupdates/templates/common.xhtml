@@ -42,9 +42,9 @@ import json
       var kPreviewURL = "${genlink('preview')}";
     </script>
     <script type="text/javascript" src="https://login.persona.org/include.js" />
-    <script type="text/javascript" src="${genlink('/static/js/jquery.js')}" />
-    <script type="text/javascript" src="${genlink('/static/js/persona.js')}" />
-    <script type="text/javascript" src="${genlink('/static/js/bootstrap.js')}" />
+    <script type="text/javascript" src="${cherrypy.url('/static/js/jquery.js')}" />
+    <script type="text/javascript" src="${cherrypy.url('/static/js/persona.js')}" />
+    <script type="text/javascript" src="${cherrypy.url('/static/js/bootstrap.js')}" />
   </body>
 
   <a py:match="a[@class='feedlink']" py:attrs="select('@*')" type="application/atom+xml">

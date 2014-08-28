@@ -6,14 +6,14 @@ CREATE TABLE IF NOT EXISTS users
   password VARCHAR(80) NULL,
   reminderday TINYINT NULL,
   sendemail TINYINT NULL
-) ENGINE=InnoDB;
+) ENGINE=InnoDB CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS projects
 (
   projectname VARCHAR(80) NOT NULL PRIMARY KEY,
   createdby VARCHAR(80) NOT NULL,
   CONSTRAINT projects_createdby_fkey FOREIGN KEY (createdby) REFERENCES users (userid)
-) ENGINE=InnoDB;
+) ENGINE=InnoDB CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS userprojects
 (
@@ -22,7 +22,7 @@ CREATE TABLE IF NOT EXISTS userprojects
   CONSTRAINT userprojects_pkey PRIMARY KEY (projectname, userid),
   CONSTRAINT userprojects_projectname_fkey FOREIGN KEY (projectname) REFERENCES projects (projectname),
   CONSTRAINT userprojects_userid_fkey FOREIGN KEY (userid) REFERENCES users (userid)
-) ENGINE=InnoDB;
+) ENGINE=InnoDB CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS posts
 (
@@ -34,7 +34,7 @@ CREATE TABLE IF NOT EXISTS posts
   tags TEXT,
   CONSTRAINT posts_pkey PRIMARY KEY (userid, postdate),
   CONSTRAINT posts_userid_fkey FOREIGN KEY (userid) REFERENCES users (userid)
-) ENGINE=InnoDB;
+) ENGINE=InnoDB CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS postbugs
 (
@@ -44,10 +44,10 @@ CREATE TABLE IF NOT EXISTS postbugs
   status TINYINT NOT NULL,
   CONSTRAINT bugs_pkey PRIMARY KEY (bugid, userid, postdate),
   CONSTRAINT bugs_userid_fkey FOREIGN KEY (userid, postdate) REFERENCES posts (userid, postdate)
-) ENGINE=InnoDB;
+) ENGINE=InnoDB CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS bugtitles
 (
   bugid INTEGER NOT NULL PRIMARY KEY,
   title TEXT
-) ENGINE=InnoDB;
+) ENGINE=InnoDB CHARSET=utf8;
