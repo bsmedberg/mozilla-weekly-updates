@@ -66,7 +66,8 @@ class Root(object):
     @model.requires_db
     def posts(self):
         recent = model.get_recentposts()
-        return render('posts.xhtml', recent=recent, team=[])
+        projects = model.get_projects()
+        return render('posts.xhtml', recent=recent, team=[], projects=projects)
 
     @model.requires_db
     def feed(self):

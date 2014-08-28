@@ -9,9 +9,32 @@
     <link href="${genlink('feed')}" type="application/atom+xml"
           rel="alternate" title="Posts Feed (All Users)"/>
   </head>
-  <body class="nocol">
-    <h1>Recent Posts (All Users)</h1>
+  <body class="container">
+    <div class="sidebar">
+      <py:choose test="loginid">
+        <py:when test="None">
+          <h4>Login</h4>
+          ${loginform()}
+        </py:when>
+        <py:otherwise>
+          <h4>User Info</h4>
+          <ul>
+            <li><a href="${genlink('preferences')}">Settings</a></li>
+	          <li><a href="#" onclick="doLogout(); return false;">Log Out</a></li>
+          </ul>
+        </py:otherwise>
+      </py:choose>
 
-    ${postlist(recent)}
+      <h4>All Projects</h4>
+      <ul>
+        <li py:for="project in projects"><a href="${genlink('project', project)}">${project}</a></li>
+      </ul>
+
+    </div>
+    <div class="maincontent">
+      <h4>Recent Posts (All Users)</h4>
+
+      ${postlist(recent)}
+    </div>
   </body>
 </html>
