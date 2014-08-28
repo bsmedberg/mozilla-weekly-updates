@@ -153,8 +153,14 @@ ol.bordered > li {
   vertical-align: middle;
 }
 
-.postdata {
+.postdata,
+.prefdata {
   margin-left: 52px;
+}
+
+.preferences form {
+  margin-top: 2em;
+  margin-bottom: 4em;
 }
 
 #previewInner .postdetail {

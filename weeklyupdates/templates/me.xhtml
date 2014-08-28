@@ -7,64 +7,96 @@
   <head>
     <title>My Status</title>
   </head>
-  <body class="nocols">
-    <h2>Preferences</h2>
+  <body class="container">
+    <div class="sidebar">
+      <py:choose test="loginid">
+        <py:when test="None">
+          <h4>Login</h4>
+          ${loginform()}
+        </py:when>
+        <py:otherwise>
+          <h4>User Info</h4>
+          <ul>
+            <li><a href="${genlink('preferences')}">Settings</a></li>
+	          <li><a href="#" onclick="doLogout(); return false;">Log Out</a></li>
+          </ul>
+        </py:otherwise>
+      </py:choose>
 
-    <form action="${genlink('preferences')}" method="POST">
-      <h3>Email</h3>
-
-      <p><label for="bugmail">Bugzilla email</label>
-        <input type="email" size="30" id="bugmail" name="bugmail" value="${(bugmail, userid)[bugmail is None]}" />
-      </p>
-
-      <p><label for="email">Alternate Delivery Address</label>
-        <input type="email" size="30" id="email" name="email" value="${(email, '')[email is None]}" />
-      </p>
-
-      <p><label for="reminderday">Nagging</label>
-        <select id="reminderday" name="reminderday"
-                initialvalue="${('-', reminderday)[reminderday is not None]}">
-          <option value="-">(No thanks)</option>
-          <option value="0">Monday</option>
-          <option value="1">Tuesday</option>
-          <option value="2">Wednesday</option>
-          <option value="3">Thursday</option>
-          <option value="4">Friday</option>
-        </select>
-        <em>Send me a reminder email if I haven't posted in the last week.</em>
-      </p>
-
-      <p><label for="sendemail">Team Update Emails</label>
-        <select id="sendemail" name="sendemail"
-                initialvalue="${('-', sendemail)[sendemail is not None]}">
-          <option value="-">(No thanks)</option>
-          <option value="0">Immediately</option>
-          <option value="1">Once a day</option>
-          <option value="2">Once a week on Tuesday</option>
-        </select>
-      </p>
-
-      <h3>Member of Projects</h3>
-
+      <h4>All Projects</h4>
       <ul>
-        <li py:for="project, current in projects">
-          <label for="project_${project}">${project}</label>
-          <input id="updateproject_${project}" type="hidden" name="updateproject_${project}" value="1"/>
-          <input id="project_${project}" type="checkbox" name="project_${project}" value="1"
-                 py:attrs="{'checked': current and 'checked' or ''}" />
-        </li>
+        <li py:for="project in projects"><a href="${genlink('project', project[0])}">${project[0]}</a></li>
       </ul>
 
-      <p><input type="submit" value="Save Preferences"/></p>
+      <py:if test="loginid is not None">
+        <h4 class="standalone"><a href="${genlink('posts')}">Recent Posts (All Users)</a></h4>
+      </py:if>
+    </div>
+    <div class="maincontent preferences">
+      <h3>Preferences</h3>
+      <form action="${genlink('preferences')}" method="POST">
+        <h4>Email</h4>
 
-    </form>
-    <form py:if="loginid is not None" action="${genlink('createproject')}"
-          method="POST">
-      <h3>Create a New Project</h3>
-      <label for="projectname">Project name:</label>
-      <input id="projectname" name="projectname" type="text" size="15"/>
-      <input type="submit" value="Create Project"/>
-    </form>
+        <div class="prefdata">
+          <p><label for="bugmail">Bugzilla email</label>
+            <input type="email" size="30" id="bugmail" name="bugmail" value="${(bugmail, userid)[bugmail is None]}" />
+          </p>
+
+          <p><label for="email">Alternate Delivery Address</label>
+            <input type="email" size="30" id="email" name="email" value="${(email, '')[email is None]}" />
+          </p>
+
+          <p><label for="reminderday">Nagging</label>
+            <select id="reminderday" name="reminderday"
+                    initialvalue="${('-', reminderday)[reminderday is not None]}">
+              <option value="-">(No thanks)</option>
+              <option value="0">Monday</option>
+              <option value="1">Tuesday</option>
+              <option value="2">Wednesday</option>
+              <option value="3">Thursday</option>
+              <option value="4">Friday</option>
+            </select>
+            <em>Send me a reminder email if I haven't posted in the last week.</em>
+          </p>
+
+          <p><label for="sendemail">Team Update Emails</label>
+            <select id="sendemail" name="sendemail"
+                    initialvalue="${('-', sendemail)[sendemail is not None]}">
+              <option value="-">(No thanks)</option>
+              <option value="0">Immediately</option>
+              <option value="1">Once a day</option>
+              <option value="2">Once a week on Tuesday</option>
+            </select>
+          </p>
+        </div>
+
+        <h4>Member of Projects</h4>
+
+        <div class="prefdata">
+          <ul class="list-unstyled">
+            <li py:for="project, current in projects">
+              <label for="project_${project}">${project}</label>
+              <input id="updateproject_${project}" type="hidden" name="updateproject_${project}" value="1"/>
+              <input id="project_${project}" type="checkbox" name="project_${project}" value="1"
+                     py:attrs="{'checked': current and 'checked' or ''}" />
+            </li>
+          </ul>
+
+        </div>
+
+        <p><input type="submit" value="Save Preferences"/></p>
+
+      </form>
+      <form py:if="loginid is not None" action="${genlink('createproject')}"
+            method="POST">
+        <h4>Create a New Project</h4>
+        <div class="prefdata">
+          <label for="projectname">Project name:</label>
+          <input id="projectname" name="projectname" type="text" size="15"/>
+        </div>
+        <input type="submit" value="Create Project"/>
+      </form>
+    </div>
 
   </body>
 </html>
