@@ -226,12 +226,14 @@ img {
 .bugpost select,
 .bugpost textarea,
 .bugpost #previewOuter a,
+.bugpost .postdetail a,
 .bugpost .bug a {
   background-color: #428BCA;
   color: #EEE;
 }
 
 .bugpost #previewOuter a,
+.bugpost .postdetail a,
 .bugpost .bug a {
   text-decoration: underline;
 }
