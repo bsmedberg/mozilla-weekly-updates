@@ -28,7 +28,7 @@ def renderatom(**kwargs):
     rv = t.generate(loginid=cherrypy.request.loginid,
                       feedtag=cherrypy.request.app.config['weeklyupdates']['feed.tag.domain'],
                       **kwargs).render('xml')
-    if type(rv) == unicode:
+    if isinstance(rv, unicode):
       rv = rv.encode('utf-8')
     return rv
 
@@ -41,6 +41,8 @@ def kwargs_to_buglist(kwargs):
             continue
         bugid = int(bug_key.group(1))
         summary = kwargs.get("bug%d.summary" % (bugid,), "Unknown bug")
+        if isinstance(summary, str):
+            summary = summary.decode("utf-8")
         statusnum = model.bugstatuses.get(value, 0)
         bug = model.Bug(summary, bugid, statusnum)
         bugs.append(bug)
@@ -246,11 +248,11 @@ class Root(object):
         today = util.today().toordinal()
         now = util.now()
         bugs = kwargs_to_buglist(kwargs)
-        if type(completed) == str:
+        if isinstance(completed, str):
             completed = completed.decode("utf-8")
-        if type(planned) == str:
+        if isinstance(planned, str):
             planned = planned.decode("utf-8")
-        if type(tags) == str:
+        if isinstance(tags, str):
             tags = tags.decode("utf-8")
         post = model.create_post_with_bugs(('<preview>', today, now, completed, planned, tags), bugs)
         return render('preview.xhtml', post=post)
@@ -299,11 +301,11 @@ class Root(object):
         for bug in bugs:
             model.save_bugstatus(cur, loginid, bug, today)
         allteam, sendnow = model.get_userteam_emails(loginid)
-        if completed and type(completed) == str:
+        if isinstance(completed, str):
             completed = completed.decode("utf-8")
-        if planned and type(planned) == str:
+        if isinstance(planned, str):
             planned = planned.decode("utf-8")
-        if tags and type(tags) == str:
+        if isinstance(tags, str):
             tags = tags.decode("utf-8")
         if len(sendnow):
             mail.sendpost(email, allteam, sendnow,
