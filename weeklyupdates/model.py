@@ -108,7 +108,7 @@ def get_user_posts(userid):
                    FROM posts
                    WHERE userid = ?
                    ORDER BY postdate DESC, posttime DESC LIMIT 10''', (userid,))
-    posts = [create_post_with_bugs(r) for r in cur.fetchall()]
+    posts = [create_post_with_bugs(r, cur) for r in cur.fetchall()]
     if not len(posts):
         posts.append(Post(None))
         thispost = Post(None)
@@ -127,7 +127,7 @@ def get_user_feedposts(userid):
                      AND postdate >= ?
                    ORDER BY postdate DESC, posttime DESC''',
                 (userid, util.today().toordinal() - 15))
-    posts = [create_post_with_bugs(d) for d in cur.fetchall()]
+    posts = [create_post_with_bugs(d, cur) for d in cur.fetchall()]
     return posts
 
 def get_all_userposts(userid):
@@ -136,7 +136,7 @@ def get_all_userposts(userid):
                    FROM posts
                    WHERE userid = ?
                    ORDER BY postdate DESC, posttime DESC''', (userid,))
-    posts = [create_post_with_bugs(r) for r in cur.fetchall()]
+    posts = [create_post_with_bugs(r, cur) for r in cur.fetchall()]
     return posts
 
 def get_teamposts(userid):
@@ -151,7 +151,7 @@ def get_teamposts(userid):
                                   AND u1.userid = posts.userid
                                   AND u2.userid = ?)
                      ORDER BY postdate DESC, posttime DESC''', (userid,))
-    posts = [create_post_with_bugs(d) for d in cur.fetchall()]
+    posts = [create_post_with_bugs(d, cur) for d in cur.fetchall()]
     return posts
 
 def get_feedposts():
@@ -161,7 +161,7 @@ def get_feedposts():
                    WHERE postdate > ?
                    ORDER BY postdate DESC, posttime DESC''',
                 (util.today().toordinal() - 15,))
-    posts = [create_post_with_bugs(d) for d in cur.fetchall()]
+    posts = [create_post_with_bugs(d, cur) for d in cur.fetchall()]
     return posts
 
 def get_recentposts():
@@ -174,7 +174,7 @@ def get_recentposts():
                      AND postdate > ?
                    ORDER BY postdate DESC, posttime DESC''',
                 (util.today().toordinal() - 15,))
-    posts = [create_post_with_bugs(d) for d in cur.fetchall()]
+    posts = [create_post_with_bugs(d, cur) for d in cur.fetchall()]
     return posts
 
 bugstatuses = {
@@ -202,12 +202,11 @@ class Bug(object):
     def __str__(self):
         return "%s - %s\n  %d %s" % (self.id, self.summary, self.status, self.status_text)
 
-def create_post_with_bugs(data, bugs=None):
+def create_post_with_bugs(data, cur, bugs=None):
     post = Post(data)
     if bugs != None:
         post.populatebugs(bugs)
     else:
-        cur = get_cursor()
         cur.execute('''SELECT titles.title, bug.bugid, bug.status
                        FROM bugtitles AS titles, postbugs AS bug
                        WHERE bug.userid = ?
@@ -281,7 +280,7 @@ def get_project_posts(projectname):
                                  WHERE userprojects.userid = posts.userid
                                  AND userprojects.projectname = ?)
                    ORDER BY postdate DESC, posttime DESC''', (projectname,))
-    posts = [create_post_with_bugs(d) for d in cur.fetchall()]
+    posts = [create_post_with_bugs(d, cur) for d in cur.fetchall()]
     return posts
 
 def get_naglist(cur):
@@ -308,7 +307,7 @@ def iter_daily(cur, day):
                                     AND u2.userid = ?)
                        ORDER BY postdate ASC, posttime ASC''',
                     (day.toordinal(), userid))
-        posts = [create_post_with_bugs(r) for r in cur.fetchall()]
+        posts = [create_post_with_bugs(r, cur) for r in cur.fetchall()]
         yield userid, email, posts
 
 def iter_weekly(cur, start, end):
@@ -325,7 +324,7 @@ def iter_weekly(cur, start, end):
                                     AND u2.userid = ?)
                        ORDER BY postdate ASC, posttime ASC''',
                     (start.toordinal(), end.toordinal(), userid))
-        posts = [create_post_with_bugs(r) for r in cur.fetchall()]
+        posts = [create_post_with_bugs(r, cur) for r in cur.fetchall()]
         yield userid, email, posts
 
 def get_bugmail(cur, userid):
