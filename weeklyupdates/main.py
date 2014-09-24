@@ -254,7 +254,7 @@ class Root(object):
             planned = planned.decode("utf-8")
         if isinstance(tags, str):
             tags = tags.decode("utf-8")
-        post = model.create_post_with_bugs(('<preview>', today, now, completed, planned, tags), bugs)
+        post = model.create_post_with_bugs(('<preview>', today, now, completed, planned, tags), None, bugs)
         return render('preview.xhtml', post=post)
 
     @require_login
@@ -310,7 +310,7 @@ class Root(object):
         if len(sendnow):
             mail.sendpost(email, allteam, sendnow,
                           model.create_post_with_bugs((loginid, today, now,
-                                completed, planned, tags), bugs))
+                                completed, planned, tags), None, bugs))
 
         raise cherrypy.HTTPRedirect(cherrypy.url('/'))
 
