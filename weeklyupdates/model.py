@@ -409,7 +409,7 @@ def get_currentbugs(userid, iteration):
     if (r.getcode() == 200):
         try:
             bugData = json.loads(r.read())['bugs']
-            bugData = filter(lambda (bug): bug['cf_fx_iteration'] == iteration, bugData)
+            bugData = filter(lambda (bug): bug['cf_fx_iteration'].startswith(iteration), bugData)
         except:
             pass
 
