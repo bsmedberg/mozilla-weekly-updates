@@ -1,7 +1,5 @@
-import sys, cherrypy, datetime, smtplib, email.mime.multipart, email.mime.text
+import sys, cherrypy, datetime, email.mime.multipart, email.mime.text
 import main, model, util
-
-_genericfrom = 'Mozilla Status Updates <noreply@smedbergs.us>'
 
 def rendermail(template, subject, **kwargs):
     t = main.loader.load(template)
@@ -9,9 +7,8 @@ def rendermail(template, subject, **kwargs):
     textBody = t.generate(loginid=None, subject=subject, **kwargs)
     return htmlBody.render('html'), textBody.render('text').strip()
 
-def sendmails(messages, fromaddress=None, recipientlist=None, app=None):
-    if app is None:
-        app = cherrypy.request.app
+def sendmails_smtp(messages, fromaddress, app):
+    import smtplib
     smtpserver = app.config['weeklyupdates']['smtp.server']
     smtpuser = app.config['weeklyupdates'].get('smtp.username', None)
     smtppass = app.config['weeklyupdates'].get('smtp.password', None)
@@ -21,45 +18,72 @@ def sendmails(messages, fromaddress=None, recipientlist=None, app=None):
         session.login(smtpuser, smtppass)
 
     for message in messages:
-        if recipientlist is not None:
-            messageto = recipientlist
-        else:
-            messageto = [message['To']]
+        recipient = message['To']
 
         messagestr = message.as_string()
-        for recipient in messageto:
-            try:
-                session.sendmail("", recipient, messagestr)
-            except AttributeError, e:
-                cherrypy.log.error("Exception sending mail from %r to %r: %s" % (fromaddress, recipientlist, e))
-            except smtplib.SMTPException, e:
-                cherrypy.log.error("Exception sending mail from %r to %r: %s" % (fromaddress, recipientlist, e))
+        try:
+            session.sendmail("", recipient, messagestr)
+        except AttributeError, e:
+            cherrypy.log.error("Exception sending mail from %r to %r: %s" % (fromaddress, recipient, e))
+        except smtplib.SMTPException, e:
+            cherrypy.log.error("Exception sending mail from %r to %r: %s" % (fromaddress, recipient, e))
     try:
         session.quit()
     except smtplib.SMTPException:
         pass
 
-def sendpost(fromaddress, tolist, recipientlist, post):
+def sendmails_ses(messages, fromaddress, app):
+    import boto3, botocore.exceptions
+    session = boto3.client('ses')
+
+    for message in messages:
+        recipient = message['To']
+
+        messagestr = message.as_string()
+        try:
+            msg = session.send_raw_email(
+                Source=fromaddress,
+                Destinations=[recipient],
+                RawMessage={'Data': messagestr}
+            )
+            cherrypy.log.error_log.info("Sent email. %s %i %s", recipient, msg.get('HTTPStatusCode', 0), msg.get('MessageId', None))
+        except botocore.exceptions.ClientError, e:
+            cherrypy.log.error_log.error("Failed email. %s %s", recipient, e)
+
+def sendmails(messages, app=None):
+    if app is None:
+        app = cherrypy.request.app
+
+    fromaddress = app.config['weeklyupdates']['email.from']
+    for message in messages:
+        message['From'] = fromaddress
+
+    if app.config['weeklyupdates'].get('email.use_ses', False):
+        sendmails_ses(messages, fromaddress, app)
+    else:
+        sendmails_smtp(messages, fromaddress, app)
+
+def sendpost(fromaddress, recipientlist, post):
     subject = "Status Update: %s on %s" % (post.userid, post.postdate.isoformat())
 
-    message = email.mime.multipart.MIMEMultipart('alternative')
-    message['To'] = ', '.join(tolist)
-    message['From'] = _genericfrom
-    message['Sender'] = 'weekly-updates@smedbergs.us'
-    message['Subject'] = subject
-    message['List-Id'] = '<weekly-updates.mozilla.com>'
+    messages = []
 
-    html, text = rendermail('message.xhtml', subject, post=post)
-    message.attach(email.mime.text.MIMEText(text, 'plain', 'UTF-8'))
-    message.attach(email.mime.text.MIMEText(html, 'html', 'UTF-8'))
+    for recipient in recipientlist:
+        message = email.mime.multipart.MIMEMultipart('alternative')
+        message['To'] = recipient
+        message['Subject'] = subject
+        message['List-Id'] = '<weekly-updates.mozilla.com>'
 
-    sendmails([message], fromaddress, recipientlist)
+        html, text = rendermail('message.xhtml', subject, post=post)
+        message.attach(email.mime.text.MIMEText(text, 'plain', 'UTF-8'))
+        message.attach(email.mime.text.MIMEText(html, 'html', 'UTF-8'))
+        messages.append(message)
+
+    sendmails(messages)
 
 def getdigest(to, subject, posts):
     message = email.mime.multipart.MIMEMultipart('alternative')
     message['To'] = to
-    message['From'] = _genericfrom
-    message['Sender'] = 'weekly-updates@smedbergs.us'
     message['Subject'] = subject
     message['List-Id'] = '<weekly-updates.mozilla.com>'
 
@@ -85,8 +109,6 @@ def getnags(cur):
 
         message = email.mime.text.MIMEText(nag, 'plain', 'UTF-8')
         message['To'] = usermail
-        message['From'] = _genericfrom
-        message['Sender'] = 'weekly-updates@smedbergs.us'
         message['Subject'] = "Please post a status report"
         message['List-Id'] = '<weekly-updates.mozilla.com>'
         yield message

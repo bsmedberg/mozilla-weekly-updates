@@ -308,7 +308,7 @@ class Root(object):
         if isinstance(tags, str):
             tags = tags.decode("utf-8")
         if len(sendnow):
-            mail.sendpost(email, allteam, sendnow,
+            mail.sendpost(email, sendnow,
                           model.create_post_with_bugs((loginid, today, now,
                                 completed, planned, tags), None, bugs))
 
