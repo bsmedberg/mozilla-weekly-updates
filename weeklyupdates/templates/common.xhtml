@@ -24,8 +24,6 @@ import json
         <py:if test="loginid is not None">
           <span class="pull-right small text-muted hidden-xs">${loginid}</span>
         </py:if>
-	<span class="pull-right small text-muted hidden-xs dates">${daysleft} work
-	${'day' if daysleft==1 else 'days'} remaining in iteration ${iteration}</span>
       </h3>
     </div>
     <div id="content">
@@ -132,31 +130,15 @@ import json
       <div class="status col1">
         <div>
           <div class="right-note"><a href="${genlink('markup')}" target="markup">Markdown Details</a></div>
-          <py:choose>
-            <py:when test="'firefox' in team">
-              <h4>1. What did you do yesterday?</h4>
-            </py:when>
-            <py:otherwise>
-              <h4>1. What did you get done?</h4>
-            </py:otherwise>
-          </py:choose>
+          <h4>1. What have you done?</h4>
           <p><textarea id="completed" name="completed" class="fullwidth"
             rows="${post.completed and post.completed.count('\n') + 1 or 3}">${post.completed}</textarea></p>
 
-          <py:choose>
-            <py:when test="'firefox' in team">
-              <h4>2. What will you do today?</h4>
-            </py:when>
-            <py:otherwise>
-              <h4>2. What are you going to do next?</h4>
-            </py:otherwise>
-          </py:choose>
+          <h4>2. What will you do next?</h4>
           <p><textarea id="planned" name="planned" class="fullwidth"
             rows="${post.planned and post.planned.count('\n') + 1 or 3}">${post.planned}</textarea></p>
 
-          <py:choose>
-	    <h4>3. List anything that's blocking your work.</h4>
-          </py:choose>
+	  <h4>3. Is there anything else your team needs to know? Is there anything blocking your work?</h4>
           <p><textarea id="tags" name="tags" class="fullwidth"
             rows="${post.tags and post.tags.count('\n') + 1 or 2}">${post.tags}</textarea></p>
 
