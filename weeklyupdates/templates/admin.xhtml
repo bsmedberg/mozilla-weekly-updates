@@ -1,0 +1,25 @@
+<!-- -*- Mode: XML -*- -->
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:py="http://genshi.edgewall.org/"
+      xmlns:xi="http://www.w3.org/2001/XInclude">
+  <xi:include href="common.xhtml"/>
+
+  <head>
+    <title>Mozilla Status Board Admin</title>
+  </head>
+  <body class="container">
+    <div class="maincontent">
+      <h3>Site Admin</h3>
+
+      <div py:if="message is not None" class="note bordered">
+	${message}
+      </div>
+
+      <form action="${genlink('admin')}" method="POST" class="bordered">
+	<h4>Stop Mail Delivery</h4>
+
+	<p><input type="text" name="mail" size="25" placeholder="emailtoremove@foo.bar"/><input type="submit" value="Stop"/></p>
+      </form>
+    </div>
+  </body>
+</html>

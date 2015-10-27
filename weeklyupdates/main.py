@@ -361,6 +361,23 @@ class Root(object):
     def markup(self):
         return render('markup.xhtml')
 
+    @require_login
+    @model.requires_db
+    def admin(self, mail=None):
+        loginid = cherrypy.request.loginid
+        if loginid != cherrypy.request.app.config['weeklyupdates']['admin.userid']:
+            raise cherrypy.HTTPError(403, "Must be logged in as an admin user")
+
+        message = None
+        if cherrypy.request.method.upper() == 'POST':
+            cur = model.get_cursor()
+            cur.execute('''UPDATE users
+                           SET sendemail = NULL
+                           WHERE email = ? OR (email IS NULL AND userid = ?)''',
+                        (mail, mail))
+            message = "{} user(s) affected".format(cur.rowcount)
+        return render('admin.xhtml', message=message)
+
 dispatcher = cherrypy.dispatch.RoutesDispatcher()
 dispatcher.controllers['root'] = Root()
 
@@ -386,6 +403,7 @@ connect('/createproject', 'createproject', methods=('POST',))
 connect('/project/{projectname}', 'project')
 connect('/project/{projectname}/feed', 'projectfeed')
 connect('/markup', 'markup')
+connect('/admin', 'admin', methods=('GET', 'POST'))
 
 def render_error(**kwargs):
     return render('error.xhtml', **kwargs)
