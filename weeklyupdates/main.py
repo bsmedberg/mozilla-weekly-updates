@@ -372,7 +372,7 @@ class Root(object):
         if cherrypy.request.method.upper() == 'POST':
             cur = model.get_cursor()
             cur.execute('''UPDATE users
-                           SET sendemail = NULL
+                           SET sendemail = NULL, reminderday = NULL
                            WHERE email = ? OR (email IS NULL AND userid = ?)''',
                         (mail, mail))
             message = "{} user(s) affected".format(cur.rowcount)
