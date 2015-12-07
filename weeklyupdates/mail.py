@@ -103,7 +103,7 @@ def getnags(cur):
 
         nag += "Please try to post weekly to keep other informed of your work."
 
-        nag += "\n\nhttp://benjamin.smedbergs.us/weekly-updates.fcgi/"
+        nag += "\n\nhttp://statusupdates.dev.mozaws.net/"
 
         print "Sending nag to %s <%s>" % (userid, usermail)
 
